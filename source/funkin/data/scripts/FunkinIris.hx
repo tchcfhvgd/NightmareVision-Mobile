@@ -254,6 +254,8 @@ class FunkinIris extends FunkinScript
 		set('AnimateSprite', flxanimate.AnimateSprite);
 		set("FlxBackdrop", flixel.addons.display.FlxBackdrop);
 		set("FlxTiledSprite", flixel.addons.display.FlxTiledSprite);
+		set("FlxPieDial", flixel.addons.display.FlxPieDial);
+		set("FlxPieDialShape", flixel.addons.display.FlxPieDial.FlxPieDialShape);
 
 		set("add", FlxG.state.add);
 		set("remove", FlxG.state.remove);
@@ -344,6 +346,10 @@ class FunkinIris extends FunkinScript
 
 		set("GameOverSubstate", funkin.states.substates.GameOverSubstate);
 		set("GameOverVideoSubstate", funkin.states.substates.GameOverVideoSubstate);
+
+		set("openSubState", (s)->{
+			FlxG.state.openSubState(s);
+		});
 
 		if ((FlxG.state is PlayState) && PlayState.instance != null)
 		{
