@@ -12,6 +12,7 @@ import flixel.util.FlxTimer;
 import flixel.FlxBasic;
 import flixel.math.FlxPoint;
 import flixel.system.FlxSound;
+import mobile.StorageUtil;
 #if sys
 import sys.io.*;
 import sys.*;
