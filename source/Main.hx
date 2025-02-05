@@ -2,6 +2,7 @@ package;
 
 import funkin.backend.FunkinRatioScaleMode;
 import funkin.backend.DebugDisplay;
+import funkin.backend.CrashHandler;
 import flixel.FlxG;
 import flixel.FlxGame;
 import flixel.FlxState;
