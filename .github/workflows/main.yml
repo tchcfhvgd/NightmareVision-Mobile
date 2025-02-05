@@ -1,3 +1,4 @@
+
 # This is a basic workflow to help you get started with Actions
 
 name: Build
@@ -16,126 +17,98 @@ on:
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "build"
-  buildLinux:
-    # The type of runner that the job will run on
-    runs-on: ubuntu-latest
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
+  buildAndroid:
+    name: buildAndroid
+    runs-on: ubuntu-24.04
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@main
 
-      - uses: krdlab/setup-haxe@master
+      - name: Setup Haxe
+        uses: krdlab/setup-haxe@master
         with:
-          haxe-version: 4.2.0
-      # Runs a set of commands using the runners shell
+          haxe-version: 4.3.6
+      
+      - name: Restore Previous Cache
+        id: cache-debug-build-android-restore
+        uses: actions/cache/restore@main
+        with:
+          path: |
+            ~/haxelib
+            ~/.gradle
+            export/release/android/haxe
+            export/release/android/obj
+          key: cache-android-build
+      
       - name: Install Haxelib
         run: |
           haxelib setup ~/haxelib
-          haxelib install hxcpp > /dev/null
-          haxelib install lime
+          haxelib git hxcpp https://github.com/mcagabe19-stuff/hxcpp
+          haxelib git lime https://github.com/mcagabe19-stuff/lime-8.2.2
           haxelib install openfl
-          haxelib --never install flixel
-          haxelib run lime setup flixel
-          haxelib run lime setup
-          haxelib install flixel-tools
-          haxelib install flixel-ui
-          haxelib install flixel-addons
-          haxelib install tjson
-          haxelib install hxjsonast
-          haxelib git linc_luajit https://github.com/nebulazorua/linc_luajit
+          haxelib git flixel https://github.com/MobilePorting/flixel 5.8.0
+          haxelib install flixel-ui 2.6.1
+          haxelib install flixel-addons 3.2.3
+          haxelib install hxvlc 1.5.5
           haxelib install hscript
-          haxelib git hscript-ex https://github.com/ianharrigan/hscript-ex
-          haxelib git discord_rpc https://github.com/Aidan63/linc_discord-rpc
-          haxelib install hxcpp-debug-server
-          haxelib list
-      - name: Create Version Tag
-        run: echo "${{github.run_id}}" > VERSION
-      - name: Compile
-        run: haxelib run lime build Project.xml linux --app-version="4.0.0-${{ github.run_id}}"
-      - name: Publish Artifact
-        uses: actions/upload-artifact@main
-        with:
-          name: linuxBuild
-          path: 'export/release/linux/bin' 
-  buildWindows:
-    runs-on: windows-latest
-    
-    steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v2.3.0
-
-      - uses: krdlab/setup-haxe@master
-        with:
-          haxe-version: 4.2.0
-      # Runs a set of commands using the runners shell
-      - name: Install Haxelib
-        run: |
-          haxelib setup C:/haxelib
-          haxelib install hxcpp > nul
-          haxelib install lime
-          haxelib install openfl
-          haxelib --never install flixel
-          haxelib run lime setup flixel
-          haxelib run lime setup
           haxelib install flixel-tools
-          haxelib install flixel-ui
-          haxelib install flixel-addons
-          haxelib install tjson
-          haxelib install hxjsonast
-          haxelib git linc_luajit https://github.com/nebulazorua/linc_luajit
-          haxelib install hscript 
-          haxelib git hscript-ex https://github.com/ianharrigan/hscript-ex
-          haxelib git discord_rpc https://github.com/Aidan63/linc_discord-rpc
+          haxelib git hscript-iris https://github.com/crowplexus/hscript-iris
+          haxelib git flxanimate https://github.com/FunkinCrew/flxanimate
+          haxelib git linc_luajit https://github.com/MobilePorting/linc_luajit
+          haxelib git extension-androidtools https://github.com/MAJigsaw77/extension-androidtools
           haxelib install hxcpp-debug-server
           haxelib list
-        shell: cmd
-      - name: Create Version Tag
-        run: echo "${{github.run_id}}" > VERSION
-      - name: Compile
-        run: haxelib run lime build windows --app-version="4.0.0-${{ github.run_id}}"
-      - name: Publish Artifact
-        uses: actions/upload-artifact@main
-        with:
-          name: windowsBuild
-          path: export/release/windows/bin
-  buildMac:
-    runs-on: macos-12
-
-    steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v2
-
-      - uses: krdlab/setup-haxe@master
-        with:
-          haxe-version: 4.2.0
-      # Runs a set of commands using the runners shell
-      - name: Install Haxelib
+      
+      - name: Setup Lime
         run: |
-          haxelib setup ~/haxelib
-          haxelib install hxcpp > /dev/null
-          haxelib install lime
-          haxelib install openfl
-          haxelib --never install flixel
-          haxelib run lime setup flixel
-          haxelib run lime setup
-          haxelib install flixel-tools
-          haxelib install flixel-ui
-          haxelib install flixel-addons
-          haxelib install tjson
-          haxelib install hxjsonast
-          haxelib git linc_luajit https://github.com/nebulazorua/linc_luajit
-          haxelib install hscript
-          haxelib git hscript-ex https://github.com/ianharrigan/hscript-ex
-          haxelib git discord_rpc https://github.com/Aidan63/linc_discord-rpc
-          haxelib install hxcpp-debug-server
-          haxelib list
-      - name: Create Version Tag
-        run: echo "${{github.run_id}}" > VERSION
+          haxelib run lime setup -alias -y
+          haxelib run lime config ANDROID_SDK $ANDROID_HOME
+          haxelib run lime config ANDROID_NDK_ROOT $ANDROID_NDK_LATEST_HOME
+          haxelib run lime config JAVA_HOME $JAVA_HOME_17_X64
+          haxelib run lime config ANDROID_SETUP true
+          
       - name: Compile
-        run: haxelib run lime build mac --app-version="4.0.0-${{ github.run_id}}"
+        run: haxelib run lime build android
+      
+      - name: Clear Previous Cache
+        uses: actions/github-script@main
+        with:
+          script: |
+            try {
+            	const caches = await github.rest.actions.getActionsCacheList({
+            		owner: context.repo.owner,
+            		repo: context.repo.repo,
+            	})
+            	if (typeof caches.data.actions_caches != null && caches.data.actions_caches.length > 0) {
+            		for (const cache of caches.data.actions_caches) {
+            			if (cache.key == "cache-android-build") {
+            				console.log('Clearing ' + cache.key + '...')
+            				await github.rest.actions.deleteActionsCacheById({
+            					owner: context.repo.owner,
+            					repo: context.repo.repo,
+            					cache_id: cache.id,
+            				})
+            				console.log("Previous Cache Cleared!")
+            			}
+            		}
+            	}
+            } catch (error) {
+            	console.log(error.message);
+            }
+      - name: Save Current Cache
+        id: cache-release-build-android-save
+        uses: actions/cache/save@main
+        with:
+          path: |
+            ~/haxelib
+            ~/.gradle
+            export/release/android/haxe
+            export/release/android/obj
+          key: cache-android-build
+      
       - name: Publish Artifact
         uses: actions/upload-artifact@main
         with:
-          name: macBuild
-          path: export/release/macos/bin
+          name: buildAndroid
+          path: export/release/android/bin/app/build/outputs/apk/release/*.apk
