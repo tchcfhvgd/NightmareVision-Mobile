@@ -40,6 +40,8 @@ import funkin.states.editors.*;
 import funkin.data.scripts.FunkinLua.ModchartSprite;
 import funkin.modchart.*;
 import funkin.backend.SyncedFlxSoundGroup;
+import funkin.objects.SongCard;
+import funkin.data.Metadata;
 
 @:structInit class SpeedEvent
 {
@@ -74,8 +76,6 @@ class PlayState extends MusicBeatState
 		};
 
 	var noteRows:Array<Array<Array<Note>>> = [[], []];
-
-	public static var meta:Metadata = null;
 
 	public static var STRUM_X = 42;
 	public static var STRUM_X_MIDDLESCROLL = -278;
@@ -258,6 +258,11 @@ class PlayState extends MusicBeatState
 	public var songScore:Int = 0;
 	public var songHits:Int = 0;
 	public var songMisses:Int = 0;
+	public var basegameHoldHandling:Bool = false;
+
+	public var card:SongCard;
+	public var hasMetadata:Bool;
+	public static var metadata:Null<MetadataFile>;
 
 	public static var campaignScore:Int = 0;
 	public static var campaignMisses:Int = 0;
@@ -342,10 +347,6 @@ class PlayState extends MusicBeatState
 	public var onResumeSignal:FlxSignal = new FlxSignal();
 
 	public var playHUD:BaseHUD = null;
-
-
-	public var soundMode:String = ''; //crude setup but its done quick. essentially make this = "SWAP" in the case the vocals ALSO contain the inst. it will mute the inst track when vocals play and vice versa
-
 
 	@:noCompletion public function set_cpuControlled(val:Bool)
 	{
@@ -481,6 +482,7 @@ class PlayState extends MusicBeatState
 		{
 			// detailsText = "";
 		}
+		setOnScripts('isStoryMode', isStoryMode);
 
 		// String for when the game is paused
 		detailsPausedText = "Paused - " + detailsText;
@@ -671,6 +673,19 @@ class PlayState extends MusicBeatState
 		add(playFields);
 		add(grpNoteSplashes);
 
+		metadata = Metadata.get(songName);
+		setOnScripts('metadata', metadata);
+
+		hasMetadata = (metadata != null);
+
+		if (hasMetadata) {
+			card = new SongCard(0, 0, metadata);
+			card.screenCenter(Y);
+			card.x = -card.width;
+			add(card);
+			setOnScripts('card', card);
+		}
+
 		playHUD = new funkin.huds.PsychHUD(this);
 		insert(members.indexOf(playFields), playHUD); // Data told me to do this
 		playHUD.cameras = [camHUD];
@@ -678,8 +693,6 @@ class PlayState extends MusicBeatState
 		var splash:NoteSplash = new NoteSplash(100, 100, 0);
 		grpNoteSplashes.add(splash);
 		splash.alpha = 0.0;
-
-		meta = Metadata.getSong();
 
 		generateSong(SONG.song);
 		modManager = new ModManager(this);
@@ -732,6 +745,7 @@ class PlayState extends MusicBeatState
 		notes.cameras = [camHUD];
 		botplayTxt.cameras = [camHUD];
 		doof.cameras = [camOther];
+		if (hasMetadata) card.cameras = [camOther];
 
 		setOnScripts('playFields', playFields);
 		setOnScripts('grpNoteSplashes', grpNoteSplashes);
@@ -826,15 +840,7 @@ class PlayState extends MusicBeatState
 		Paths.sound('missnote1');
 		Paths.sound('missnote2');
 		Paths.sound('missnote3');
-
-		if (PauseSubState.songName != null)
-		{
-			Paths.music(PauseSubState.songName);
-		}
-		else if (ClientPrefs.pauseMusic != 'None')
-		{
-			Paths.music(Paths.formatToSongPath(ClientPrefs.pauseMusic));
-		}
+		Paths.music('breakfast');
 
 		#if desktop
 		// Updating Discord Rich Presence.
@@ -877,7 +883,6 @@ class PlayState extends MusicBeatState
 		}
 
 		// trace('noteskin file: "${SONG.arrowSkin}"');
-
 		if (SONG.arrowSkin != 'default' && SONG.arrowSkin != '' && SONG.arrowSkin != null)
 		{
 			if (FileSystem.exists(Paths.modsNoteskin('${SONG.arrowSkin}')))
@@ -886,15 +891,15 @@ class PlayState extends MusicBeatState
 			}
 			else if (FileSystem.exists(Paths.noteskin('${SONG.arrowSkin}')))
 			{
-				// Noteskin doesn't exist in assets, trying mods folder
+				// Noteskin doesn't exist in assets, trying mods folder // this comment is wrong btw it tries the mods folder first then assets lol
 				noteSkin = new NoteSkinHelper(Paths.noteskin('${SONG.arrowSkin}'));
 			}
 		}
 		else
 		{
-			if (FileSystem.exists(Paths.modsNoteskin('default')))
+			if (FileSystem.exists(Paths.noteskin('default')))
 			{
-				noteSkin = new NoteSkinHelper(Paths.modsNoteskin('default'));
+				noteSkin = new NoteSkinHelper(Paths.noteskin('default'));
 			}
 		}
 
@@ -1580,9 +1585,6 @@ class PlayState extends MusicBeatState
 		vocals.play();
 		vocals.volume = 1;
 
-		FlxG.sound.music.volume = soundMode == "SWAP" ? 0 : 1;
-
-
 		if (startOnTime > 0)
 		{
 			setSongTime(startOnTime - 500);
@@ -1598,6 +1600,8 @@ class PlayState extends MusicBeatState
 
 		// Song duration in a float, useful for the time left feature
 		songLength = FlxG.sound.music.length;
+
+		if (hasMetadata && card.data.card.expandBeat == 0) card.display();
 
 		#if desktop
 		// Updating Discord Rich Presence (with Time Left)
@@ -2768,39 +2772,6 @@ class PlayState extends MusicBeatState
 					}
 				}
 
-				/*
-																	var center:Float = strumY + daNote.daWidth / 2;
-																	if (field.members[daNote.noteData].sustainReduce
-																		&& daNote.isSustainNote
-																		&& (daNote.playField.playerControls || !daNote.ignoreNote) &&
-																		(!daNote.playField.playerControls || (daNote.wasGoodHit || (daNote.prevNote.wasGoodHit && !daNote.canBeHit))))
-																	{
-																		if (strumScroll)
-																		{
-																			if(daNote.y - daNote.offset.y * daNote.scale.y + daNote.height >= center)
-																			{
-																				var swagRect = new FlxRect(0, 0, daNote.frameWidth, daNote.frameHeight);
-																				swagRect.height = (center - daNote.y) / daNote.scale.y;
-																				swagRect.y = daNote.frameHeight - swagRect.height;
-		
-																				daNote.clipRect = swagRect;
-																			}
-																		}
-																		else
-																		{
-																			if (daNote.y + daNote.offset.y * daNote.scale.y <= center)
-																			{
-																				var swagRect = new FlxRect(0, 0, daNote.width / daNote.scale.x, daNote.height / daNote.scale.y);
-																				swagRect.y = (center - daNote.y) / daNote.scale.y;
-																				swagRect.height -= swagRect.y;
-		
-																				daNote.clipRect = swagRect;
-																			}
-																		}
-																	}
-						 */
-
-				// Kill extremely late notes and cause misses
 				if (Conductor.songPosition > noteKillOffset + daNote.strumTime)
 				{
 					daNote.garbage = true;
@@ -3319,6 +3290,7 @@ class PlayState extends MusicBeatState
 							}
 						});
 				}
+
 			case 'Camera Zoom Chain':
 				var split1:Array<String> = value1.split(',');
 				var gameZoom:Float = Std.parseFloat(split1[0].trim());
@@ -3598,7 +3570,7 @@ class PlayState extends MusicBeatState
 					FlxG.sound.music.volume = 1;
 
 					cancelMusicFadeTween();
-					FlxG.switchState(() -> new StoryMenuState());
+					FlxG.switchState(() -> new WeeklyMainMenuState());
 
 					// if ()
 					if (!ClientPrefs.getGameplaySetting('practice', false) && !ClientPrefs.getGameplaySetting('botplay', false))
@@ -3621,9 +3593,6 @@ class PlayState extends MusicBeatState
 
 					trace('LOADING NEXT SONG');
 					trace(Paths.formatToSongPath(PlayState.storyPlaylist[0]) + difficulty);
-
-					FlxTransitionableState.skipNextTransIn = true;
-					FlxTransitionableState.skipNextTransOut = true;
 
 					prevCamFollow = camFollow;
 					prevCamFollowPos = camFollowPos;
@@ -3698,9 +3667,6 @@ class PlayState extends MusicBeatState
 		// trace(noteDiff, ' ' + Math.abs(note.strumTime - Conductor.songPosition));
 
 		vocals.playerVolume = 1;
-		
-		if (soundMode == 'SWAP') FlxG.sound.music.volume = 0;
-
 		var placement:String = Std.string(combo);
 
 		// tryna do MS based judgment due to popular demand
@@ -3962,9 +3928,6 @@ class PlayState extends MusicBeatState
 
 		combo = 0;
 		health -= daNote.missHealth * healthLoss;
-
-		if (soundMode == 'SWAP') FlxG.sound.music.volume = 1;
-
 		if (instakillOnMiss)
 		{
 			vocals.playerVolume = 0;
@@ -4150,8 +4113,6 @@ class PlayState extends MusicBeatState
 
 		if (SONG.needsVoices)
 		{
-			if (soundMode == 'SWAP') FlxG.sound.music.volume = 0;
-			
 			if (vocals.opponentVocals.length == 0) vocals.playerVolume = 1;
 			else vocals.opponentVolume = 1;
 		}
@@ -4290,8 +4251,10 @@ class PlayState extends MusicBeatState
 				{
 					if (gf != null)
 					{
-						gf.playAnim(animToPlay + daAlt, true);
-						gf.holdTimer = 0;
+						if(basegameHoldHandling && !note.isSustainNote || !basegameHoldHandling){
+							gf.playAnim(animToPlay + daAlt, true);
+							gf.holdTimer = 0;
+						}
 					}
 				}
 				else if (field.owner.animTimer <= 0 && !field.owner.voicelining)
@@ -4323,12 +4286,14 @@ class PlayState extends MusicBeatState
 
 						field.owner.mostRecentRow = note.row;
 					}
-					else
+					else if(basegameHoldHandling && !note.isSustainNote || !basegameHoldHandling) // ty beth for fixing this
 					{
 						if (note.noteType != "Ghost Note")
 						{
-							if (note.owner == null) field.owner.playAnim(animToPlay + daAlt, true);
-							else note.owner.playAnim(animToPlay + daAlt, true);
+							if (note.owner == null)
+								field.owner.playAnim(animToPlay + daAlt, true);
+							else
+								note.owner.playAnim(animToPlay + daAlt, true);
 						}
 						else
 						{
@@ -4501,8 +4466,8 @@ class PlayState extends MusicBeatState
 						var realAnim = noteSkin.data.singAnimations[Std.int(Math.abs(animNote.noteData))] + daAlt;
 						if (field.owner.mostRecentRow != note.row)
 						{
-							if (owner == null) field.owner.playAnim(realAnim, true);
-							else owner.playAnim(realAnim, true);
+							if (note.owner == null) field.owner.playAnim(realAnim, true);
+							else note.owner.playAnim(realAnim, true);
 						}
 
 						if (note != animNote && chord.indexOf(note) != animNote.noteData)
@@ -4514,17 +4479,19 @@ class PlayState extends MusicBeatState
 
 						field.owner.mostRecentRow = note.row;
 					}
-					else
+					else if(basegameHoldHandling && !note.isSustainNote || !basegameHoldHandling)
 					{
 						if (note.noteType != "Ghost Note")
 						{
-							if (owner == null) field.owner.playAnim(animToPlay + daAlt, true);
-							else owner.playAnim(animToPlay + daAlt, true);
+							if (note.owner == null)
+								field.owner.playAnim(animToPlay + daAlt, true);
+							else
+								note.owner.playAnim(animToPlay + daAlt, true);
 						}
 						else
 						{
-							if (owner == null) field.owner.playGhostAnim(note.noteData, animToPlay, true);
-							else owner.playGhostAnim(note.noteData, animToPlay, true);
+							if (note.owner == null) field.owner.playGhostAnim(note.noteData, animToPlay, true);
+							else note.owner.playGhostAnim(note.noteData, animToPlay, true);
 						}
 					}
 				}
@@ -4751,6 +4718,8 @@ class PlayState extends MusicBeatState
 				}
 			}
 		}
+
+		if (hasMetadata && card.data.card.expandBeat == curBeat && card.data.card.expandBeat > 0) card.display();
 
 		setOnScripts('curBeat', curBeat); // DAWGG?????
 		callOnScripts('onBeatHit', []);
@@ -4989,7 +4958,7 @@ class PlayState extends MusicBeatState
 		public dynamic function updateRatingFC() {
 			// Rating FC
 			ratingFC = "";
-			if (epics > 0) ratingFC = "KFC";
+			if (epics > 0) ratingFC = "TFC";
 			if (sicks > 0) ratingFC = "SFC";
 			if (goods > 0) ratingFC = "GFC";
 			if (bads > 0 || shits > 0) ratingFC = "FC";
