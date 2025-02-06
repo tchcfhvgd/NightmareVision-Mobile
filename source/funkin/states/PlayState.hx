@@ -41,6 +41,9 @@ import funkin.states.editors.*;
 import funkin.data.scripts.FunkinLua.ModchartSprite;
 import funkin.modchart.*;
 import funkin.backend.SyncedFlxSoundGroup;
+import mobile.TouchButton;
+import mobile.TouchPad;
+import mobile.input.MobileInputID;
 
 @:structInit class SpeedEvent
 {
@@ -368,6 +371,9 @@ class PlayState extends MusicBeatState
 	public var skipCountdown:Bool = false;
 	public var countdownSounds:Bool = true;
 	public var countdownDelay:Float = 0;
+	
+	public var isGameOverVideo:Bool = false;
+	public var gameOverVideoName:String = '';
 	
 	/**
 		Reference to the total song length of the Inst. Used by the time bar
@@ -756,6 +762,18 @@ class PlayState extends MusicBeatState
 		splash.alpha = 0.0;
 		
 		meta = Metadata.getSong();
+		
+		#if !android
+		addTouchPad("NONE", "P");
+		addTouchPadCamera();
+		touchPad.visible = true;
+		#end
+		addMobileControls();
+		if (!ClientPrefs.controllerMode)
+		{
+		mobileControls.onButtonDown.add(onButtonPress);
+		mobileControls.onButtonUp.add(onButtonRelease);
+		}
 		
 		generateSong(SONG.song);
 		modManager = new ModManager(this);
@@ -1235,6 +1253,18 @@ class PlayState extends MusicBeatState
 			startCountdown();
 		}
 	}
+	
+	public function setGameOverVideo(name:String):Void
+	{
+		if (!FileSystem.exists(Paths.video(name)))
+		{
+			addTextToDebug('[setGameOverVideo] ${Paths.video(name)} can\'t be found.', FlxColor.RED);
+			return;
+		}
+
+		isGameOverVideo = true;
+		gameOverVideoName = name;
+	}
 
 	var dialogueCount:Int = 0;
 	
@@ -1398,7 +1428,7 @@ class PlayState extends MusicBeatState
 			callOnHScripts('postModifierRegister', []);
 			
 			new FlxTimer().start(countdownDelay, (t:FlxTimer) -> {
-				startedCountdown = true;
+				startedCountdown = mobileControls.instance.visible = true;
 				Conductor.songPosition = 0;
 				Conductor.songPosition -= Conductor.crotchet * 5;
 				setOnLuas('startedCountdown', true);
@@ -2476,7 +2506,7 @@ class PlayState extends MusicBeatState
 		setOnHScripts('curStep', curStep);
 		setOnHScripts('curBeat', curBeat);
 		
-		if (controls.PAUSE && startedCountdown && canPause)
+		if (controls.PAUSE || #if android FlxG.android.justReleased.BACK #else touchPad.buttonP.justPressed #end && startedCountdown && canPause)
 		{
 			final ret:Dynamic = callOnScripts('onPause', []);
 			if (ret != Globals.Function_Stop)
@@ -2915,8 +2945,15 @@ class PlayState extends MusicBeatState
 				}
 				
 
+				if (isGameOverVideo)
+				{
+					openSubState(new GameOverVideoSubstate(gameOverVideoName));
+				}
+				else
+				{
 				openSubState(new GameOverSubstate(boyfriend.getScreenPosition().x - boyfriend.positionArray[0],
 					boyfriend.getScreenPosition().y - boyfriend.positionArray[1], camFollowPos.x, camFollowPos.y));
+				}
 				
 				
 				#if desktop
@@ -3527,6 +3564,8 @@ class PlayState extends MusicBeatState
 		deathCounter = 0;
 		seenCutscene = false;
 		
+		mobileControls.instance.visible = #if !android touchPad.visible = #end false;
+		
 		#if ACHIEVEMENTS_ALLOWED
 		if (achievementObj != null)
 		{
@@ -3835,6 +3874,113 @@ class PlayState extends MusicBeatState
 			}
 		}
 		return -1;
+	}
+	
+	function onButtonPress(button:TouchButton):Void
+	{
+	    if (button.IDs.filter(id -> id.toString().startsWith("EXTRA")).length > 0)
+			return;
+
+		var buttonCode:Int = (button.IDs[0].toString().startsWith('NOTE')) ? button.IDs[0] : button.IDs[1];
+		
+		if (cpuControlled || paused || !startedCountdown) return;
+
+		if (buttonCode > -1 && button.justPressed)
+		{
+			if (!boyfriend.stunned && generatedMusic && !endingSong)
+			{
+				// more accurate hit time for the ratings?
+				var lastTime:Float = Conductor.songPosition;
+				Conductor.songPosition = FlxG.sound.music.time;
+
+				var canMiss:Bool = !ClientPrefs.ghostTapping;
+
+				var pressNotes:Array<Note> = [];
+
+				var ghostTapped:Bool = true;
+				for (field in playFields.members)
+				{
+					if (field.playerControls && field.inControl && !field.autoPlayed)
+					{
+						var sortedNotesList:Array<Note> = field.getTapNotes(buttonCode);
+						sortedNotesList.sort((a, b) -> Std.int(a.strumTime - b.strumTime));
+
+						if (sortedNotesList.length > 0)
+						{
+							pressNotes.push(sortedNotesList[0]);
+							field.noteHitCallback(sortedNotesList[0], field);
+						}
+					}
+				}
+
+				if (pressNotes.length == 0)
+				{
+					callOnScripts('onGhostTap', [buttonCode]);
+					if (canMiss)
+					{
+						noteMissPress(buttonCode);
+						callOnScripts('noteMissPress', [buttonCode]);
+					}
+				}
+
+				// I dunno what you need this for but here you go
+				//									- Shubs
+
+				// Shubs, this is for the "Just the Two of Us" achievement lol
+				//									- Shadow Mario
+
+				// LOOOOOL
+				// 									- ava
+				keysPressed[buttonCode] = true;
+
+				// more accurate hit time for the ratings? part 2 (Now that the calculations are done, go back to the time it was before for not causing a note stutter)
+				Conductor.songPosition = lastTime;
+			}
+
+			for (field in playFields.members)
+			{
+				if (field.inControl && !field.autoPlayed && field.playerControls)
+				{
+					var spr:StrumNote = field.members[buttonCode];
+					if (spr != null && spr.animation.curAnim.name != 'confirm')
+					{
+						spr.playAnim('pressed');
+						spr.resetAnim = 0;
+					}
+				}
+			}
+
+			callOnScripts('onKeyPress', [buttonCode]);
+  callOnScripts('onButtonPress', [buttonCode]);
+		}
+		// trace('pressed: ' + controlArray);
+	}
+
+	function onButtonRelease(button:TouchButton):Void
+	{
+	    if (button.IDs.filter(id -> id.toString().startsWith("EXTRA")).length > 0)
+			return;
+
+		var buttonCode:Int = (button.IDs[0].toString().startsWith('NOTE')) ? button.IDs[0] : button.IDs[1];
+		
+		if (startedCountdown && !paused && buttonCode > -1)
+		{
+			for (field in playFields.members)
+			{
+				if (field.inControl && !field.autoPlayed && field.playerControls)
+				{
+					var spr:StrumNote = field.members[buttonCode];
+					if (spr != null)
+					{
+						spr.playAnim('static');
+						spr.resetAnim = 0;
+					}
+				}
+			}
+			callOnScripts('onKeyRelease', [buttonCode]);
+ callOnScripts('onButtonRelease', [buttonCode]);
+		}
+		// trace('released: ' + controlArray);
 	}
 	
 	// Hold notes
