@@ -302,6 +302,8 @@ class CreditsState extends MusicBeatState
 		intendedColor = bg.color;
 		changeSelection();
 		super.create();
+
+		addTouchPad("UP_DOWN", "A_B");
 	}
 
 	var quitting:Bool = false;
