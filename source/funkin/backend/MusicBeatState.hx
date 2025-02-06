@@ -1,6 +1,7 @@
 package funkin.backend;
 
 import flixel.group.FlxGroup.FlxTypedGroup;
+import funkin.utils.SortUtil;
 import funkin.backend.BaseTransitionState;
 import funkin.states.transitions.SwipeTransition;
 import flixel.addons.ui.FlxUIState;
@@ -101,7 +102,7 @@ class MusicBeatState extends FlxUIState
 	public function refreshZ(?group:FlxTypedGroup<FlxBasic>)
 	{
 		group ??= FlxG.state;
-		group.sort(CoolUtil.sortByZ, flixel.util.FlxSort.ASCENDING);
+		group.sort(SortUtil.sortByZ, flixel.util.FlxSort.ASCENDING);
 	}
 
 	override function update(elapsed:Float)
