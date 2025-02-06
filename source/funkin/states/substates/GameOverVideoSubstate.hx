@@ -59,7 +59,7 @@ class GameOverVideoSubstate extends MusicBeatSubstate
 		}
 		}
 
-		if (controls.BACK || #if android || FlxG.android.justReleased.BACK #end)
+		if (controls.BACK #if android || FlxG.android.justReleased.BACK #end)
 		{
 			PlayState.deathCounter = 0;
 			PlayState.seenCutscene = false;
