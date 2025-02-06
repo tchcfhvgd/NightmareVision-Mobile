@@ -38,6 +38,8 @@ class Init extends FlxState
 
 		funkin.data.Highscore.load();
 
+		mobile.MobileData.init();
+
 		funkin.objects.video.FunkinVideoSprite.init();
 
 		if (FlxG.save.data != null && FlxG.save.data.fullscreen) FlxG.fullscreen = FlxG.save.data.fullscreen;
