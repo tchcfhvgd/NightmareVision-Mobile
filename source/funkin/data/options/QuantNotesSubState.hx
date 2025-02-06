@@ -138,6 +138,8 @@ class QuantNotesSubState extends MusicBeatSubstate
 		add(hsbText);
 
 		changeSelection();
+
+		addTouchPad("LEFT_FULL", "A_B_C");
 	}
 
 	var changingNote:Bool = false;
@@ -158,7 +160,7 @@ class QuantNotesSubState extends MusicBeatSubstate
 					updateValue(1);
 					FlxG.sound.play(Paths.sound('scrollMenu'));
 				}
-				else if (controls.RESET)
+				else if (controls.RESET || touchPad.buttonC.justPressed)
 				{
 					resetValue(curSelected, typeSelected);
 					FlxG.sound.play(Paths.sound('scrollMenu'));
@@ -217,7 +219,7 @@ class QuantNotesSubState extends MusicBeatSubstate
 				changeType(1);
 				FlxG.sound.play(Paths.sound('scrollMenu'));
 			}
-			if (controls.RESET)
+			if (controls.RESET || touchPad.buttonC.justPressed)
 			{
 				for (i in 0...3)
 				{
