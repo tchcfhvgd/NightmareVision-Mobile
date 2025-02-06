@@ -50,13 +50,16 @@ class GameOverVideoSubstate extends MusicBeatSubstate
 
 		PlayState.instance.callOnScripts('onUpdatePost', [elapsed]);
 
-		if (controls.ACCEPT)
+		for (touch in FlxG.touches.list)
+		{
+		if (controls.ACCEPT || touch.justPressed)
 		{
 			PlayState.instance.callOnScripts('onGameOverConfirm', [true]);
 			FlxG.resetState();
 		}
+		}
 
-		if (controls.BACK)
+		if (controls.BACK || #if android || FlxG.android.justReleased.BACK #end)
 		{
 			PlayState.deathCounter = 0;
 			PlayState.seenCutscene = false;
