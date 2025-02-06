@@ -23,6 +23,7 @@ class PsychHUD extends BaseHUD
 	var ratingSuffix:String = '';
 	var showRating:Bool = true;
 	var showCombo:Bool = true;
+	var comboOffsets:Null<Array<Int>> = null; // So u can overwrite the users combo offset if needed without messing with clientprefs
 
 	// TODO: Make combo shit change for week 6, the ground work is already there so incase someone else wants to come on in and mess w it.
 	override function init()
@@ -78,6 +79,8 @@ class PsychHUD extends BaseHUD
 
 		onUpdateScore({score: 0, accuracy: 0, misses: 0});
 
+		comboOffsets = null;
+
 		parent.setOnScripts('healthBar', healthBar);
 		parent.setOnScripts('iconP1', iconP1);
 		parent.setOnScripts('iconP2', iconP2);
@@ -86,6 +89,13 @@ class PsychHUD extends BaseHUD
 		parent.setOnScripts('timeTxt', timeTxt);
 		parent.setOnScripts('ratingPrefix', ratingPrefix);
 		parent.setOnScripts('ratingSuffix', ratingSuffix);
+		parent.setOnScripts('comboOffsets', comboOffsets);
+
+		if(comboOffsets == null)
+		{
+			comboOffsets = ClientPrefs.comboOffset;
+			trace(comboOffsets);
+		}
 	}
 
 	override function onSongStart()
@@ -96,15 +106,15 @@ class PsychHUD extends BaseHUD
 
 	override function onUpdateScore(data:ScoreData, missed:Bool = false)
 	{
-		var str:String = parent.ratingName;
+		var str:String = 'N/A';
 		if (parent.totalPlayed != 0)
 		{
-			str += ' (${data.accuracy}%) - ${parent.ratingFC}';
+			str = '${data.accuracy}% - ${parent.ratingFC}';
 		}
 
 		final tempScore:String = 'Score: ${FlxStringUtil.formatMoney(data.score, false)}'
 			+ (!parent.instakillOnMiss ? ' | Misses: ${data.misses}' : "")
-			+ ' | Rating: ${str}';
+			+ ' | Accuracy: ${str}';
 
 		if (!missed && !parent.cpuControlled) doScoreBop();
 
@@ -123,8 +133,13 @@ class PsychHUD extends BaseHUD
 	public function updateIconsPosition()
 	{
 		final iconOffset:Int = 26;
-		iconP1.x = healthBar.barCenter + (150 * iconP1.scale.x - 150) / 2 - iconOffset;
-		iconP2.x = healthBar.barCenter - (150 * iconP2.scale.x) / 2 - iconOffset * 2;
+		if(!healthBar.leftToRight){
+			iconP1.x = healthBar.barCenter + (150 * iconP1.scale.x - 150) / 2 - iconOffset;
+			iconP2.x = healthBar.barCenter - (150 * iconP2.scale.x) / 2 - iconOffset * 2;	
+		}else{
+			iconP1.x = healthBar.barCenter - (150 * iconP2.scale.x) / 2 - iconOffset * 2;	
+			iconP2.x = healthBar.barCenter + (150 * iconP1.scale.x - 150) / 2 - iconOffset;
+		}
 	}
 
 	public function updateIconsScale(elapsed:Float)
@@ -144,6 +159,11 @@ class PsychHUD extends BaseHUD
 		var boyfriend = parent.boyfriend;
 		healthBar.setColors(FlxColor.fromRGB(dad.healthColorArray[0], dad.healthColorArray[1], dad.healthColorArray[2]),
 			FlxColor.fromRGB(boyfriend.healthColorArray[0], boyfriend.healthColorArray[1], boyfriend.healthColorArray[2]));
+	}
+	public function flipBar(){
+		healthBar.leftToRight = !healthBar.leftToRight;
+		iconP1.flipX = !iconP1.flipX;
+		iconP2.flipX = !iconP2.flipX;
 	}
 
 	override function update(elapsed:Float)
@@ -190,16 +210,9 @@ class PsychHUD extends BaseHUD
 			healthBar.bounds.min, healthBar.bounds.max, 0, 100);
 		healthBar.percent = (newPercent != null ? newPercent : 0);
 
-		if (!healthBar.leftToRight)
-		{
-			iconP1.animation.curAnim.curFrame = (healthBar.percent < 20) ? 1 : 0; // If health is under 20%, change player icon to frame 1 (losing icon), otherwise, frame 0 (normal)
-			iconP2.animation.curAnim.curFrame = (healthBar.percent > 80) ? 1 : 0; // If health is over 80%, change opponent icon to frame 1 (losing icon), otherwise, frame 0 (normal)
-		}
-		else
-		{
-			iconP1.animation.curAnim.curFrame = (healthBar.percent < 20) ? 0 : 1; // If health is under 20%, change player icon to frame 1 (losing icon), otherwise, frame 0 (normal)
-			iconP2.animation.curAnim.curFrame = (healthBar.percent > 80) ? 0 : 1; // If health is over 80%, change opponent icon to frame 1 (losing icon), otherwise, frame 0 (normal)
-		}
+		iconP1.animation.curAnim.curFrame = (healthBar.percent < 20) ? 1 : 0; // If health is under 20%, change player icon to frame 1 (losing icon), otherwise, frame 0 (normal)
+		iconP2.animation.curAnim.curFrame = (healthBar.percent > 80) ? 1 : 0; // If health is over 80%, change opponent icon to frame 1 (losing icon), otherwise, frame 0 (normal)
+
 	}
 
 	override function popUpScore(ratingImage:String,
@@ -219,8 +232,8 @@ class PsychHUD extends BaseHUD
 		rating.velocity.y -= FlxG.random.int(140, 175);
 		rating.velocity.x -= FlxG.random.int(0, 10);
 		rating.visible = (!ClientPrefs.hideHud && showRating);
-		rating.x += ClientPrefs.comboOffset[0];
-		rating.y -= ClientPrefs.comboOffset[1];
+		rating.x += comboOffsets[0];
+		rating.y -= comboOffsets[1];
 		insert(members.indexOf(timeTxt), rating); // this is really stupid but it fixes a layering issue, find a better work around maybe?
 
 		if (!PlayState.isPixelStage)
@@ -258,8 +271,8 @@ class PsychHUD extends BaseHUD
 			numScore.x = coolText.x + (43 * daLoop) - 90;
 			numScore.y += 80;
 
-			numScore.x += ClientPrefs.comboOffset[2];
-			numScore.y -= ClientPrefs.comboOffset[3];
+			numScore.x += comboOffsets[2];
+			numScore.y -= comboOffsets[3];
 
 			if (!PlayState.isPixelStage)
 			{
