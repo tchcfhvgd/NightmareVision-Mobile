@@ -4,7 +4,6 @@ import funkin.data.options.OptionsState;
 import flixel.effects.FlxFlicker;
 import flixel.group.FlxGroup.FlxTypedGroup;
 
-@:build(funkin.data.scripts.ScriptMacros.buildScriptedState())
 class MainMenuState extends MusicBeatState
 {
 	static var curSelected:Int = 0;
@@ -20,8 +19,6 @@ class MainMenuState extends MusicBeatState
 
         FlxG.cameras.reset();
 		FlxG.camera.followLerp = 0.3;
-
-        if (__script != null) __script.set('MenuButton',MenuButton);
 
 		persistentUpdate = true;
 
@@ -72,6 +69,8 @@ class MainMenuState extends MusicBeatState
 			if (i is FlxSprite) cast(i, FlxSprite).antialiasing = ClientPrefs.globalAntialiasing;
 
         super.create();
+
+	addTouchPad("UP_DOWN", "A_B_E");
 	}
 
 	override function update(elapsed:Float)
@@ -89,7 +88,7 @@ class MainMenuState extends MusicBeatState
 
 			if (controls.UI_DOWN_P || controls.UI_UP_P) changeSelection(controls.UI_DOWN_P ? 1 : -1);
 
-			if (FlxG.keys.anyJustPressed(ClientPrefs.copyKey(ClientPrefs.keyBinds.get('debug_1'))))
+			if (FlxG.keys.anyJustPressed(ClientPrefs.copyKey(ClientPrefs.keyBinds.get('debug_1'))) || touchPad.buttonE.justPressed)
 			{
 				canSelect = false;
 				FlxG.switchState(() -> new funkin.states.editors.MasterEditorMenu());
