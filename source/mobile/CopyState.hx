@@ -91,7 +91,7 @@ class CopyState extends MusicBeatState
 		add(loadingBar);
 
 		loadedText = new FlxText(loadingBar.x, loadingBar.y + 4, FlxG.width, '', 16);
-		loadedText.setFormat(Paths.font("vcr.ttf"), 16, FlxColor.WHITE, CENTER);
+		loadedText.setFormat("VCR OSD Mono", 16, FlxColor.WHITE, CENTER);
 		add(loadedText);
 
 		var ticks:Int = 15;
