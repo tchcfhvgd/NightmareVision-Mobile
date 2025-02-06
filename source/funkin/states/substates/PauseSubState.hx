@@ -155,6 +155,9 @@ class PauseSubState extends MusicBeatSubstate
 		regenMenu();
 		cameras = [cam];
 		super.create();
+
+	        addTouchPad("LEFT_RIGHT", "A_B");
+		addTouchPadCamera();
 	}
 
 	var holdTime:Float = 0;
