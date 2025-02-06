@@ -39,7 +39,7 @@ class OptionsState extends MusicBeatState
 		'Graphics',
 		'Visuals and UI',
 		'Gameplay',
-		"Loading"
+		"Mobile Options"
 	];
 	private var grpOptions:FlxTypedGroup<Alphabet>;
 
@@ -48,6 +48,10 @@ class OptionsState extends MusicBeatState
 
 	function openSelectedSubstate(label:String)
 	{
+		if (label != "Adjust Delay and Combo"){
+			persistentUpdate = false;
+			removeTouchPad();
+		}
 		switch (label)
 		{
 			case 'Notes':
@@ -60,8 +64,8 @@ class OptionsState extends MusicBeatState
 				openSubState(new funkin.data.options.VisualsUISubState());
 			case 'Gameplay':
 				openSubState(new funkin.data.options.GameplaySettingsSubState());
-			case 'Loading':
-				openSubState(new funkin.data.options.MiscSubState());
+			case 'Mobile Options':
+				openSubState(new mobile.options.MobileOptionsSubState());
 			case 'Adjust Delay and Combo':
 				LoadingState.loadAndSwitchState(new funkin.data.options.NoteOffsetState());
 		}
@@ -104,11 +108,16 @@ class OptionsState extends MusicBeatState
 		ClientPrefs.saveSettings();
 
 		super.create();
+
+		addTouchPad("UP_DOWN", "A_B_C");
 	}
 
 	override function closeSubState()
 	{
 		super.closeSubState();
+		persistentUpdate = true;
+		removeTouchPad();
+		addTouchPad("UP_DOWN", "A_B_C");
 		ClientPrefs.saveSettings();
 	}
 
@@ -140,6 +149,11 @@ class OptionsState extends MusicBeatState
 		if (controls.ACCEPT)
 		{
 			openSelectedSubstate(options[curSelected]);
+		}
+
+		if (touchPad != null && touchPad.buttonC.justPressed) {
+			touchPad.active = touchPad.visible = persistentUpdate = false;
+			openSubState(new mobile.MobileControlSelectSubState());
 		}
 	}
 
