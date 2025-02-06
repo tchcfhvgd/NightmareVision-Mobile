@@ -37,15 +37,6 @@ class CoolUtil
 	//-----------------------------------------------------------------//
 
 	/**
-		sorting method that goes by FlxBasic's z values
-	**/
-	inline public static function sortByZ(order:Int, a:FlxBasic, b:FlxBasic):Int
-	{
-		if (a == null || b == null) return 0;
-		return flixel.util.FlxSort.byValues(order, a.zIndex, b.zIndex);
-	}
-
-	/**
 		capatalizes the first letter of a string.
 	**/
 	inline public static function capitalize(text:String):String return text.charAt(0).toUpperCase() + text.substr(1).toLowerCase();
