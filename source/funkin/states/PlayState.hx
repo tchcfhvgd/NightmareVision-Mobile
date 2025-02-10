@@ -306,6 +306,7 @@ class PlayState extends MusicBeatState
 	**/
 	public var camGame:FlxCamera;
 	
+	public var camCinem:FlxCamera;
 	/**
 		The camera hud elements are drawn to
 	**/
@@ -530,13 +531,16 @@ class PlayState extends MusicBeatState
 		cpuControlled = ClientPrefs.getGameplaySetting('botplay', false);
 		
 		camGame = new FlxCamera();
+		camCinem = new FlxCamera();
 		camHUD = new FlxCamera();
 		camOther = new FlxCamera();
 		
+		camCinem.bgColor = 0x0;
 		camHUD.bgColor = 0x0;
 		camOther.bgColor = 0x0;
 		
 		FlxG.cameras.reset(camGame);
+		FlxG.cameras.add(camCinem, false);
 		FlxG.cameras.add(camHUD, false);
 		FlxG.cameras.add(camOther, false);
 		
@@ -1315,6 +1319,45 @@ class PlayState extends MusicBeatState
 				startCountdown();
 			}
 		}
+	}
+	
+	public function startDialogue2(dialogueFile:String, music:String = null):Void
+	{
+	        var path:String;
+			#if MODS_ALLOWED
+			path = Paths.modsJson(Paths.formatToSongPath(PlayState.SONG.song) + '/' + dialogueFile);
+			if (!FileSystem.exists(path))
+			#end
+			path = Paths.json(Paths.formatToSongPath(PlayState.SONG.song) + '/' + dialogueFile);
+
+			#if MODS_ALLOWED
+			if (FileSystem.exists(path))
+			#else
+			if (Assets.exists(path))
+			#end
+			{
+				var shit:DialogueFile = DialogueBoxPsych.parseDialogue(path);
+				if (shit.dialogue.length > 0)
+				{
+				startDialogue(shit, music);
+				}
+				else
+				{
+					
+				}
+			}
+		else
+		{
+			if (endingSong)
+			{
+				endSong();
+			}
+			else
+			{
+				startCountdown();
+			}
+		}
+	callOnScripts('startDialogue', [dialogueFile, music]);
 	}
 	
 	var startTimer:FlxTimer;
