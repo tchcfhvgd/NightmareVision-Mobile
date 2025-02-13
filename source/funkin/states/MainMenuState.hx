@@ -79,7 +79,7 @@ class MainMenuState extends MusicBeatState
 		setOnScript('camFollow', camFollow);
 		setOnScript('debugKeys', debugKeys);
 
-		if (hardcoded())
+		if (isHardcodedState())
 		{
 			var yScroll:Float = Math.max(0.25 - (0.05 * (optionShit.length - 4)), 0.1);
 			var bg:FlxSprite = new FlxSprite(-80).loadGraphic(Paths.image('menuBG'));
@@ -176,7 +176,7 @@ class MainMenuState extends MusicBeatState
 			if (FreeplayState.vocals != null) FreeplayState.vocals.volume += 0.5 * elapsed;
 		}
 
-		if (hardcoded())
+		if (isHardcodedState())
 		{
 			if (!selectedSomethin)
 			{
