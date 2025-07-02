@@ -3767,10 +3767,9 @@ class PlayState extends MusicBeatState
 						&& controlHoldArray[daNote.noteData]
 						&& daNote.canBeHit
 						&& !daNote.tooLate
-						&& !daNote.wasGoodHit
-						|| (daNote.doAutoSustain && daNote.noteData > SONG.keys))
+						&& !daNote.wasGoodHit)
 					{
-						if (daNote.playField.noteHitCallback != null) daNote.playField.noteHitCallback(daNote, daNote.playField);
+						daNote.playField.noteHitCallback.dispatch(daNote, daNote.playField);
 					}
 				}
 			});
@@ -3786,8 +3785,8 @@ class PlayState extends MusicBeatState
 				#end
 			}
 			else if (boyfriend.holdTimer > Conductor.stepCrotchet * 0.0011 * boyfriend.singDuration
-				&& boyfriend.animation.curAnim.name.startsWith('sing')
-				&& !boyfriend.animation.curAnim.name.endsWith('miss'))
+				&& boyfriend.getAnimName().startsWith('sing')
+				&& !boyfriend.getAnimName().endsWith('miss'))
 			{
 				boyfriend.dance();
 				// boyfriend.animation.curAnim.finish();
