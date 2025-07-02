@@ -1,6 +1,6 @@
 package funkin.states.options;
 
-
+import flixel.addons.transition.FlxTransitionableState;
 import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.group.FlxGroup.FlxTypedGroup;

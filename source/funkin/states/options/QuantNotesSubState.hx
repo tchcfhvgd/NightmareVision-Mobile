@@ -1,7 +1,7 @@
 // while this CAN be apart of NotesSubState
 // fuck you
 package funkin.states.options;
-
+import flixel.addons.transition.FlxTransitionableState;
 import flixel.group.FlxGroup.FlxTypedGroup;
 import flixel.math.FlxMath;
 import flixel.util.FlxColor;
