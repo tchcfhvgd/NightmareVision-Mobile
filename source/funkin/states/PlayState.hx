@@ -3734,6 +3734,8 @@ class PlayState extends MusicBeatState
 		var left = controls.NOTE_LEFT;
 		var dodge = controls.NOTE_DODGE;
 		
+		var controlHoldArray:Array<Bool> = [left, down, up, right, dodge];
+		
 		// TO DO: Find a better way to handle controller inputs, this should work for now
 		if (ClientPrefs.controllerMode)
 		{
@@ -3752,6 +3754,7 @@ class PlayState extends MusicBeatState
 			}
 		}
 		
+		// FlxG.watch.addQuick('asdfa', upP);
 		if (startedCountdown && !boyfriend.stunned && generatedMusic)
 		{
 			// rewritten inputs???
@@ -3761,17 +3764,18 @@ class PlayState extends MusicBeatState
 				if (!daNote.playField.autoPlayed && daNote.playField.inControl && daNote.playField.playerControls)
 				{
 					if (daNote.isSustainNote
-						&& FlxG.keys.anyPressed(keysArray[daNote.noteData])
+						&& controlHoldArray[daNote.noteData]
 						&& daNote.canBeHit
 						&& !daNote.tooLate
-						&& !daNote.wasGoodHit)
+						&& !daNote.wasGoodHit
+						|| (daNote.doAutoSustain && daNote.noteData > SONG.keys))
 					{
-						daNote.playField.noteHitCallback.dispatch(daNote, daNote.playField);
+						if (daNote.playField.noteHitCallback != null) daNote.playField.noteHitCallback(daNote, daNote.playField);
 					}
 				}
 			});
 			
-			if (keysArray.contains(true) && !endingSong)
+			if (controlHoldArray.contains(true) && !endingSong)
 			{
 				#if ACHIEVEMENTS_ALLOWED
 				var achieve:String = checkForAchievement(['oversinging']);
@@ -3782,10 +3786,11 @@ class PlayState extends MusicBeatState
 				#end
 			}
 			else if (boyfriend.holdTimer > Conductor.stepCrotchet * 0.0011 * boyfriend.singDuration
-				&& boyfriend.getAnimName().startsWith('sing')
-				&& !boyfriend.getAnimName().endsWith('miss'))
+				&& boyfriend.animation.curAnim.name.startsWith('sing')
+				&& !boyfriend.animation.curAnim.name.endsWith('miss'))
 			{
 				boyfriend.dance();
+				// boyfriend.animation.curAnim.finish();
 			}
 		}
 		

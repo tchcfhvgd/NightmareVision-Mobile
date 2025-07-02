@@ -334,6 +334,9 @@ class PsychHUD extends BaseHUD
 				numScore.velocity.y = -FlxG.random.int(140, 160);
 				numScore.velocity.x = FlxG.random.float(-5, 5);
 				
+				ratingNumGroup.zIndex = 999;
+			if (ratingNumGroup.members.length > 1) for (i in ratingNumGroup.members)
+				ratingNumGroup.zIndex = ratingNumGroup.zIndex - 1;
 				ratingNumGroup.add(numScore);
 				
 				FlxTween.tween(numScore, {alpha: 0}, 0.2,
