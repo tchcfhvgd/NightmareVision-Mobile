@@ -127,6 +127,8 @@ class MainMenuState extends MusicBeatState
 				}
 			}
 			#end
+		
+		addTouchPad("UP_DOWN", "A_B");
 		}
 		super.create();
 		
