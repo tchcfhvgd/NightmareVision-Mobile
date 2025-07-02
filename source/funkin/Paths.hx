@@ -50,6 +50,9 @@ class Paths
 		}
 		#end
 		
+		if (parentFolder == "mobile")
+			return getPrimaryPath('mobile/$file');
+		
 		if (parentFolder != null) return getLibraryPath(file, parentFolder);
 		
 		if (currentLevel != null)
@@ -289,7 +292,7 @@ class Paths
 	#if MODS_ALLOWED
 	public static inline function mods(key:String = ''):String
 	{
-		return '$MODS_DIRECTORY/' + key;
+		return #if mobile Sys.getCwd() + #end '$MODS_DIRECTORY/' + key;
 	}
 	
 	public static inline function modsFont(key:String):String
@@ -343,7 +346,7 @@ class Paths
 			var fileToCheck:String = mods(mod + '/' + key);
 			if (FileSystem.exists(fileToCheck)) return fileToCheck;
 		}
-		return '$MODS_DIRECTORY/' + key;
+		return #if mobile Sys.getCwd() + #end '$MODS_DIRECTORY/' + key;
 	}
 	#end
 }

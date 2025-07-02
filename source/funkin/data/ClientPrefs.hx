@@ -16,6 +16,16 @@ import funkin.data.Controls.KeyboardScheme;
 @:build(funkin.backend.macro.SaveMacro.buildSaveVars('im gonna make this do smth later okay just not rn'))
 class ClientPrefs
 {
+	// Mobile and Mobile Controls Releated
+	@saveVar public static var extraButtons:String = "NONE"; // mobile extra button option
+	@saveVar public static var hitboxPos:Bool = true; // hitbox extra button position option
+	@saveVar public static var controlsAlpha:Float = FlxG.onMobile ? 0.6 : 0;
+	@saveVar public static var screensaver:Bool = false;
+	#if android
+	@saveVar public static var storageType:String = "EXTERNAL_DATA";
+	#end
+	@saveVar public static var hitboxType:String = "Gradient";
+	
 	// graphics ------------------------------------------------------------------------//
 	@saveVar public static var gpuCaching:Bool = true;
 	

@@ -10,6 +10,9 @@ import flixel.FlxGame;
 import flixel.FlxState;
 
 import funkin.backend.DebugDisplay;
+#if mobile
+import mobile.CopyState;
+#end
 
 class Main extends Sprite
 {
@@ -38,10 +41,22 @@ class Main extends Sprite
 	public static function main():Void
 	{
 		Lib.current.addChild(new Main());
+		#if cpp
+		cpp.NativeGc.enable(true);
+		#elseif hl
+		hl.Gc.enable(true);
+		#end
 	}
 	
 	public function new()
 	{
+		#if mobile
+		#if android
+		StorageUtil.requestPermissions();
+		#end
+		Sys.setCwd(StorageUtil.getStorageDirectory());
+		#end
+		
 		super();
 
 		initHaxeUI();
@@ -59,7 +74,7 @@ class Main extends Sprite
 			FNFGame
 			#else
 			FlxGame
-			#end(startMeta.width, startMeta.height, Init, startMeta.fps, startMeta.fps, true, startMeta.startFullScreen);
+			#end(startMeta.width, startMeta.height, #if (mobile && MODS_ALLOWED) !CopyState.checkExistingFiles() ? CopyState : #end Init, startMeta.fps, startMeta.fps, true, startMeta.startFullScreen);
 			
 		// FlxG.game._customSoundTray wants just the class, it calls new from
 		// create() in there, which gets called when it's added to stage
@@ -72,20 +87,29 @@ class Main extends Sprite
 		
 		addChild(game);
 		
-		#if !mobile
 		fpsVar = new DebugDisplay(10, 3, 0xFFFFFF);
+		#if !mobile
 		addChild(fpsVar);
+		#else
+		FlxG.game.addChild(fpsVar);
+		#end
 		Lib.current.stage.align = "tl";
 		Lib.current.stage.scaleMode = StageScaleMode.NO_SCALE;
 		if (fpsVar != null)
 		{
 			fpsVar.visible = ClientPrefs.showFPS;
 		}
-		#end
 		
 		#if html5
 		FlxG.autoPause = false;
 		FlxG.mouse.visible = false;
+		#end
+		
+		#if mobile
+		lime.system.System.allowScreenTimeout = ClientPrefs.screensaver;
+		#if android
+		FlxG.android.preventDefaultKeys = [BACK]; 
+		#end
 		#end
 		
 		FlxG.signals.gameResized.add(onResize);
