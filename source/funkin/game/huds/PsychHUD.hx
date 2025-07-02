@@ -11,9 +11,6 @@ import funkin.objects.HealthIcon;
 @:access(funkin.states.PlayState)
 class PsychHUD extends BaseHUD
 {
-	var ratingGroup:FlxTypedGroup<FlxSprite>;
-	var ratingNumGroup:FlxTypedGroup<FlxSprite>;
-	
 	var healthBar:Bar;
 	var iconP1:HealthIcon;
 	var iconP2:HealthIcon;
@@ -83,12 +80,6 @@ class PsychHUD extends BaseHUD
 		timeBar.visible = showTime;
 		add(timeBar);
 		add(timeTxt);
-		
-		ratingGroup = new FlxTypedGroup();
-		add(ratingGroup);
-		
-		ratingNumGroup = new FlxTypedGroup();
-		add(ratingNumGroup);
 		
 		cachePopUpScore();
 		
@@ -245,111 +236,109 @@ class PsychHUD extends BaseHUD
 	override function popUpScore(ratingImage:String,
 			combo:Int) // only uses daRating.image for the moment, ill change this later since I imagine ppl will want to use other parts of the rating im just lazy and wanna get a poc out - Orbyy
 	{
-		final posX = FlxG.width * 0.35;
-		
-		if (ClientPrefs.hideHud) return;
-		
-		if (showRating)
-		{
-			var rating:FlxSprite = ratingGroup.recycle(FlxSprite);
-			rating.alpha = 1;
-			rating.loadGraphic(Paths.image(ratingPrefix + ratingImage + ratingSuffix));
-			rating.screenCenter();
-			rating.x = posX - 40;
-			rating.y -= 60;
-			rating.acceleration.y = 550;
-			rating.velocity.y = -FlxG.random.int(140, 175);
-			rating.velocity.x = -FlxG.random.int(0, 10);
-			rating.x += comboOffsets[0];
-			rating.y -= comboOffsets[1];
-			rating.zIndex = 999;
-			if (ratingGroup.members.length > 1) for (i in ratingGroup.members)
-				ratingGroup.zIndex = ratingGroup.zIndex - 1;
+		var rating:FlxSprite = new FlxSprite(); // Todo
 
-			ratingGroup.add(rating);
-			ratingGroup.sort(funkin.utils.SortUtil.sortByZ, flixel.util.FlxSort.ASCENDING);
+		var coolText:FlxObject = new FlxObject(0, 0);
+		coolText.screenCenter();
+		coolText.x = FlxG.width * 0.35;
+
+		rating.loadGraphic(Paths.image(ratingPrefix + ratingImage + ratingSuffix));
+		rating.screenCenter();
+		rating.x = coolText.x - 40;
+		rating.y -= 60;
+		rating.acceleration.y = 550;
+		rating.velocity.y -= FlxG.random.int(140, 175);
+		rating.velocity.x -= FlxG.random.int(0, 10);
+		rating.visible = (!ClientPrefs.hideHud && showRating);
+		rating.x += comboOffsets[0];
+		rating.y -= comboOffsets[1];
+		insert(members.indexOf(timeTxt), rating); // this is really stupid but it fixes a layering issue, find a better work around maybe?
+
+		if (!PlayState.isPixelStage)
+		{
+			rating.setGraphicSize(Std.int(rating.width * 0.7));
+			rating.antialiasing = ClientPrefs.globalAntialiasing;
+		}
+		else
+		{
+			rating.setGraphicSize(Std.int(rating.width * pixelZoom * 0.85));
+		}
+		rating.updateHitbox();
+
+		if (!PlayState.isPixelStage)
+		{
+			rating.scale.set(0.785, 0.785);
+			FlxTween.tween(rating.scale, {x: 0.7, y: 0.7}, 0.5, {ease: FlxEase.expoOut});
+		}
+
+		var seperatedScore:Array<Int> = [];
+
+		if (combo >= 1000)
+		{
+			seperatedScore.push(Math.floor(combo / 1000) % 10);
+		}
+		seperatedScore.push(Math.floor(combo / 100) % 10);
+		seperatedScore.push(Math.floor(combo / 10) % 10);
+		seperatedScore.push(combo % 10);
+
+		var daLoop:Int = 0;
+		for (i in seperatedScore)
+		{
+			var numScore:FlxSprite = new FlxSprite().loadGraphic(Paths.image(ratingPrefix + 'num' + Std.int(i) + ratingSuffix));
+			numScore.screenCenter();
+			numScore.x = coolText.x + (43 * daLoop) - 90;
+			numScore.y += 80;
+
+			numScore.x += comboOffsets[2];
+			numScore.y -= comboOffsets[3];
 
 			if (!PlayState.isPixelStage)
 			{
-				rating.antialiasing = ClientPrefs.globalAntialiasing;
-				rating.scale.set(0.785, 0.785);
-				FlxTween.cancelTweensOf(rating, ['scale.x', 'scale.y']);
-				FlxTween.tween(rating.scale, {x: 0.7, y: 0.7}, 0.5, {ease: FlxEase.expoOut});
+				numScore.antialiasing = ClientPrefs.globalAntialiasing;
+				numScore.setGraphicSize(Std.int(numScore.width * 0.5));
 			}
 			else
 			{
-				rating.setGraphicSize(Std.int(rating.width * pixelZoom * 0.85));
+				numScore.setGraphicSize(Std.int(numScore.width * pixelZoom));
 			}
-			rating.updateHitbox();
-			
-			FlxTween.tween(rating, {alpha: 0}, 0.2,
+			numScore.updateHitbox();
+
+			numScore.acceleration.y = FlxG.random.int(200, 300);
+			numScore.velocity.y -= FlxG.random.int(140, 160);
+			numScore.velocity.x = FlxG.random.float(-5, 5);
+			numScore.visible = (!ClientPrefs.hideHud && showCombo);
+
+			insert(members.indexOf(rating), numScore);
+
+			if (!PlayState.isPixelStage)
+			{
+				numScore.scale.set(0.6, 0.6);
+				FlxTween.tween(numScore.scale, {x: 0.5, y: 0.5}, 0.5, {ease: FlxEase.expoOut});
+			}
+			else
+			{
+				numScore.scale.set(6, 6);
+			}
+
+			FlxTween.tween(numScore, {alpha: 0}, 0.2,
 				{
 					onComplete: function(tween:FlxTween) {
-						rating.kill();
+						numScore.destroy();
 					},
-					startDelay: Conductor.crotchet * 0.001
+					startDelay: Conductor.crotchet * 0.002
 				});
+
+			daLoop++;
 		}
-		
-		if (showRatingNum)
-		{
-			var seperatedScore:Array<Int> = [];
-			
-			if (combo >= 1000)
+
+		FlxTween.tween(rating, {alpha: 0}, 0.2,
 			{
-				seperatedScore.push(Math.floor(combo / 1000) % 10);
-			}
-			seperatedScore.push(Math.floor(combo / 100) % 10);
-			seperatedScore.push(Math.floor(combo / 10) % 10);
-			seperatedScore.push(combo % 10);
-			
-			var daLoop:Int = 0;
-			for (i in seperatedScore)
-			{
-				var numScore:FlxSprite = ratingNumGroup.recycle(FlxSprite);
-				numScore.loadGraphic(Paths.image(ratingPrefix + 'num' + Std.int(i) + ratingSuffix));
-				numScore.alpha = 1;
-				
-				numScore.screenCenter();
-				numScore.x = posX + (43 * daLoop) - 90;
-				numScore.y += 80;
-				
-				numScore.x += comboOffsets[2];
-				numScore.y -= comboOffsets[3];
-				
-				if (!PlayState.isPixelStage)
-				{
-					numScore.antialiasing = ClientPrefs.globalAntialiasing;
-					numScore.scale.set(0.6, 0.6);
-					FlxTween.cancelTweensOf(numScore, ['scale.x', 'scale.y']);
-					FlxTween.tween(numScore.scale, {x: 0.5, y: 0.5}, 0.5, {ease: FlxEase.expoOut});
-				}
-				else
-				{
-					numScore.setGraphicSize(Std.int(numScore.width * pixelZoom));
-				}
-				numScore.updateHitbox();
-				
-				numScore.acceleration.y = FlxG.random.int(200, 300);
-				numScore.velocity.y = -FlxG.random.int(140, 160);
-				numScore.velocity.x = FlxG.random.float(-5, 5);
-				
-				ratingNumGroup.zIndex = 999;
-			if (ratingNumGroup.members.length > 1) for (i in ratingNumGroup.members)
-				ratingNumGroup.zIndex = ratingNumGroup.zIndex - 1;
-				ratingNumGroup.add(numScore);
-				
-				FlxTween.tween(numScore, {alpha: 0}, 0.2,
-					{
-						onComplete: function(tween:FlxTween) {
-							numScore.kill();
-						},
-						startDelay: Conductor.crotchet * 0.002
-					});
-					
-				daLoop++;
-			}
-		}
+				onComplete: function(tween:FlxTween) {
+					coolText.destroy();
+					rating.destroy();
+				},
+				startDelay: Conductor.crotchet * 0.001
+			});
 	}
 	
 	function cachePopUpScore()
