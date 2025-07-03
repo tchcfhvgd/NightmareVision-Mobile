@@ -2539,7 +2539,7 @@ class PlayState extends MusicBeatState
 					
 					daNote.x += script_SUSTAINOffsets[daNote.noteData].x;
 					daNote.y += script_SUSTAINOffsets[daNote.noteData].y;
-					if (daNote.animation.curAnim.name.endsWith('end${note.noteData}'))
+					if (daNote.animation.curAnim.name.endsWith('end${daNote.noteData}'))
 					{
 						daNote.x += script_SUSTAINENDOffsets[daNote.noteData].x;
 						daNote.y += script_SUSTAINENDOffsets[daNote.noteData].y;
