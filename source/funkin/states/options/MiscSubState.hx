@@ -41,9 +41,6 @@ class MiscSubState extends BaseOptionsMenu
 			addOption(option);
 		}
 		
-		var option:Option = new Option('GPU Caching', 'If checked, GPU caching will be enabled.', 'gpuCaching', 'bool', false);
-		addOption(option);
-		
 		super();
 	}
 }

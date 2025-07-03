@@ -1,7 +1,7 @@
 // while this CAN be apart of NotesSubState
 // fuck you
 package funkin.states.options;
-
+import flixel.addons.transition.FlxTransitionableState;
 import flixel.group.FlxGroup.FlxTypedGroup;
 import flixel.math.FlxMath;
 import flixel.util.FlxColor;
@@ -119,6 +119,8 @@ class QuantNotesSubState extends MusicBeatSubstate
 		add(hsbText);
 		
 		changeSelection();
+		
+		addTouchPad("LEFT_FULL", "A_B_C");
 	}
 	
 	var changingNote:Bool = false;
@@ -139,7 +141,7 @@ class QuantNotesSubState extends MusicBeatSubstate
 					updateValue(1);
 					FlxG.sound.play(Paths.sound('scrollMenu'));
 				}
-				else if (controls.RESET)
+				else if (controls.RESET || touchPad.buttonC.justPressed)
 				{
 					resetValue(curSelected, typeSelected);
 					FlxG.sound.play(Paths.sound('scrollMenu'));
@@ -198,7 +200,7 @@ class QuantNotesSubState extends MusicBeatSubstate
 				changeType(1);
 				FlxG.sound.play(Paths.sound('scrollMenu'));
 			}
-			if (controls.RESET)
+			if (controls.RESET || touchPad.buttonC.justPressed)
 			{
 				for (i in 0...3)
 				{
@@ -238,7 +240,12 @@ class QuantNotesSubState extends MusicBeatSubstate
 		{
 			if (!changingNote)
 			{
-				close();
+			#if mobile
+			FlxTransitionableState.skipNextTransOut = true;
+			FlxG.resetState();
+			#else
+			close();
+			#end
 			}
 			else
 			{

@@ -52,6 +52,10 @@ import funkin.backend.SyncedFlxSoundGroup;
 import funkin.video.FunkinVideoSprite;
 #end
 
+import mobile.TouchButton;
+import mobile.TouchPad;
+import mobile.input.MobileInputID;
+
 class PlayState extends MusicBeatState
 {
 	public var modManager:ModManager;
@@ -769,6 +773,18 @@ class PlayState extends MusicBeatState
 		
 		meta = Metadata.getSong();
 		
+		#if !android
+		addTouchPad("NONE", "P");
+		addTouchPadCamera();
+		touchPad.visible = true;
+		#end
+		addMobileControls();
+		if (!ClientPrefs.controllerMode)
+		{
+		mobileControls.onButtonDown.add(onButtonPress);
+		mobileControls.onButtonUp.add(onButtonRelease);
+		}
+		
 		generateSong(SONG.song);
 		modManager = new ModManager(this);
 		setOnHScripts("modManager", modManager);
@@ -1308,7 +1324,7 @@ class PlayState extends MusicBeatState
 			callOnHScripts('postModifierRegister', []);
 			
 			new FlxTimer().start(countdownDelay, (t:FlxTimer) -> {
-				startedCountdown = true;
+				startedCountdown = mobileControls.instance.visible = true;
 				Conductor.songPosition = 0;
 				Conductor.songPosition -= Conductor.crotchet * 5;
 				setOnLuas('startedCountdown', true);
@@ -2272,7 +2288,7 @@ class PlayState extends MusicBeatState
 		setOnHScripts('curStep', curStep);
 		setOnHScripts('curBeat', curBeat);
 		
-		if (controls.PAUSE && startedCountdown && canPause)
+		if ((controls.PAUSE || #if android FlxG.android.justReleased.BACK #else touchPad.buttonP.justPressed #end) && startedCountdown && canPause)
 		{
 			final ret:Dynamic = callOnScripts('onPause', []);
 			if (ret != Globals.Function_Stop) openPauseMenu();
@@ -3296,6 +3312,8 @@ class PlayState extends MusicBeatState
 		deathCounter = 0;
 		seenCutscene = false;
 		
+		mobileControls.instance.visible = #if !android touchPad.visible = #end false;
+		
 		#if ACHIEVEMENTS_ALLOWED
 		if (achievementObj != null)
 		{
@@ -3606,6 +3624,102 @@ class PlayState extends MusicBeatState
 		return -1;
 	}
 	
+	private function onButtonPress(button:TouchButton):Void
+	{
+		if (button.IDs.filter(id -> id.toString().startsWith("EXTRA")).length > 0)
+			return;
+
+		var buttonCode:Int = (button.IDs[0].toString().startsWith('NOTE')) ? button.IDs[0] : button.IDs[1];
+
+		if (cpuControlled || paused || !startedCountdown) return;
+		
+		if (buttonCode > -1 && button.justPressed)
+		{
+			if (!boyfriend.stunned && generatedMusic && !endingSong)
+			{
+				// more accurate hit time for the ratings?
+				var lastTime:Float = Conductor.songPosition;
+				Conductor.songPosition = FlxG.sound.music.time;
+				
+				var canMiss:Bool = !ClientPrefs.ghostTapping;
+				
+				var pressNotes:Array<Note> = [];
+				
+				var ghostTapped:Bool = true;
+				for (field in playFields.members)
+				{
+					if (field.playerControls && field.inControl && !field.autoPlayed)
+					{
+						var sortedNotesList:Array<Note> = field.getTapNotes(buttonCode);
+						sortedNotesList.sort((a, b) -> Std.int(a.strumTime - b.strumTime));
+						
+						if (sortedNotesList.length > 0)
+						{
+							pressNotes.push(sortedNotesList[0]);
+							field.noteHitCallback.dispatch(sortedNotesList[0], field);
+						}
+					}
+				}
+				
+				if (pressNotes.length == 0)
+				{
+					callOnScripts('onGhostTap', [buttonCode]);
+					if (canMiss)
+					{
+						noteMissPress(buttonCode);
+						callOnScripts('noteMissPress', [buttonCode]);
+					}
+				}
+				
+				// this is for the "Just the Two of Us" achievement - Shadow Mario
+				keysPressed[buttonCode] = true;
+				
+				// more accurate hit time for the ratings? part 2 (Now that the calculations are done, go back to the time it was before for not causing a note stutter)
+				Conductor.songPosition = lastTime;
+			}
+			
+			for (field in playFields.members)
+			{
+				if (field.inControl && !field.autoPlayed && field.playerControls)
+				{
+					var spr:StrumNote = field.members[buttonCode];
+					if (spr != null && spr.animation.curAnim.name != 'confirm')
+					{
+						spr.playAnim('pressed');
+						spr.resetAnim = 0;
+					}
+				}
+			}
+			
+			callOnScripts('onKeyPress', [buttonCode]);
+		}
+	}
+
+	private function onButtonRelease(button:TouchButton):Void
+	{
+		if (button.IDs.filter(id -> id.toString().startsWith("EXTRA")).length > 0)
+			return;
+
+		var buttonCode:Int = (button.IDs[0].toString().startsWith('NOTE')) ? button.IDs[0] : button.IDs[1];
+
+		if (startedCountdown && !paused && buttonCode > -1)
+		{
+			for (field in playFields.members)
+			{
+				if (field.inControl && !field.autoPlayed && field.playerControls)
+				{
+					var spr:StrumNote = field.members[buttonCode];
+					if (spr != null)
+					{
+						spr.playAnim('static');
+						spr.resetAnim = 0;
+					}
+				}
+			}
+			callOnScripts('onKeyRelease', [buttonCode]);
+		}
+	}
+	
 	// Hold notes
 	function keyShit():Void
 	{
@@ -3615,6 +3729,8 @@ class PlayState extends MusicBeatState
 		var down = controls.NOTE_DOWN;
 		var left = controls.NOTE_LEFT;
 		var dodge = controls.NOTE_DODGE;
+		
+		var controlHoldArray:Array<Bool> = [left, down, up, right, dodge];
 		
 		// TO DO: Find a better way to handle controller inputs, this should work for now
 		if (ClientPrefs.controllerMode)
@@ -3634,6 +3750,7 @@ class PlayState extends MusicBeatState
 			}
 		}
 		
+		// FlxG.watch.addQuick('asdfa', upP);
 		if (startedCountdown && !boyfriend.stunned && generatedMusic)
 		{
 			// rewritten inputs???
@@ -3643,7 +3760,7 @@ class PlayState extends MusicBeatState
 				if (!daNote.playField.autoPlayed && daNote.playField.inControl && daNote.playField.playerControls)
 				{
 					if (daNote.isSustainNote
-						&& FlxG.keys.anyPressed(keysArray[daNote.noteData])
+						&& controlHoldArray[daNote.noteData]
 						&& daNote.canBeHit
 						&& !daNote.tooLate
 						&& !daNote.wasGoodHit)
@@ -3653,7 +3770,7 @@ class PlayState extends MusicBeatState
 				}
 			});
 			
-			if (keysArray.contains(true) && !endingSong)
+			if (controlHoldArray.contains(true) && !endingSong)
 			{
 				#if ACHIEVEMENTS_ALLOWED
 				var achieve:String = checkForAchievement(['oversinging']);
@@ -3668,6 +3785,7 @@ class PlayState extends MusicBeatState
 				&& !boyfriend.getAnimName().endsWith('miss'))
 			{
 				boyfriend.dance();
+				// boyfriend.animation.curAnim.finish();
 			}
 		}
 		

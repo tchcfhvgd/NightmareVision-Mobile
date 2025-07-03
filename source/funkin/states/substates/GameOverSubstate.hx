@@ -97,6 +97,9 @@ class GameOverSubstate extends MusicBeatSubstate
 		
 		FlxG.camera.follow(camFollow, LOCKON, 0);
 		
+		addTouchPad("NONE", "A_B");
+		addTouchPadCamera();
+		
 		super.create();
 	}
 	

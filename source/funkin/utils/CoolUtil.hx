@@ -4,6 +4,7 @@ import flixel.util.typeLimit.NextState;
 import flixel.addons.transition.FlxTransitionableState;
 import flixel.math.FlxPoint;
 import flixel.FlxG;
+import flixel.util.FlxColor;
 
 import openfl.utils.Assets;
 
@@ -108,6 +109,17 @@ class CoolUtil
 		}
 		
 		return daList;
+	}
+	
+	public static function colorFromString(color:String):FlxColor
+	{
+		var hideChars = ~/[\t\n\r]/;
+		var color:String = hideChars.split(color).join('').trim();
+		if(color.startsWith('0x')) color = color.substring(color.length - 6);
+
+		var colorNum:Null<FlxColor> = FlxColor.fromString(color);
+		if(colorNum == null) colorNum = FlxColor.fromString('#$color');
+		return colorNum != null ? colorNum : FlxColor.WHITE;
 	}
 	
 	public static function listFromString(string:String):Array<String>
@@ -307,5 +319,14 @@ class CoolUtil
 		if (stopMusic && FlxG.sound.music != null) FlxG.sound.music.stop();
 		
 		FlxG.switchState(target);
+	}
+	
+	public static function showPopUp(message:String, title:String):Void
+	{
+		/*#if android
+		android.Tools.showAlertDialog(title, message, {name: "OK", func: null}, null);
+		#else*/
+		FlxG.stage.window.alert(message, title);
+		//#end
 	}
 }

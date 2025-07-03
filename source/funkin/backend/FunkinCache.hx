@@ -60,6 +60,12 @@ class FunkinCache
 		#if cpp
 		cpp.vm.Gc.compact();
 		#end
+		
+		#if cpp
+		cpp.NativeGc.run(true);
+		#elseif hl
+		hl.Gc.major();
+		#end
 	}
 	
 	public function new() {}
