@@ -56,7 +56,7 @@ jobs:
           haxelib install openfl
           haxelib install hscript
           haxelib install flixel-ui 2.6.4
-          haxelib install flixel 6.1.0
+          haxelib install flixel 6.0.0
           haxelib install flixel-addons 3.3.2
           haxelib install hxvlc 2.0.1
           haxelib install hscript-iris
