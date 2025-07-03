@@ -88,11 +88,7 @@ class Main extends Sprite
 		addChild(game);
 		
 		fpsVar = new DebugDisplay(10, 3, 0xFFFFFF);
-		#if !mobile
 		addChild(fpsVar);
-		#else
-		FlxG.game.addChild(fpsVar);
-		#end
 		Lib.current.stage.align = "tl";
 		Lib.current.stage.scaleMode = StageScaleMode.NO_SCALE;
 		if (fpsVar != null)
@@ -125,6 +121,9 @@ class Main extends Sprite
 		final scale:Float = Math.max(1, Math.min(w / FlxG.width, h / FlxG.height));
 		if (fpsVar != null)
 		{
+			#if mobile
+			fpsVar.positionFPS(10, 3, Math.min(w / FlxG.width, h / FlxG.height));
+			#end
 			// remove for now idfk some people have the textfield scaling fucky ???
 			// fpsVar.scaleX = fpsVar.scaleY = scale;
 		}
