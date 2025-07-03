@@ -313,6 +313,7 @@ class FunkinIris extends FunkinScript
 		set("Character", funkin.objects.character.Character);
 		set("NoteSplash", NoteSplash);
 		set("BGSprite", BGSprite);
+		set('SpriteFromSheet', SpriteFromSheet);
 		set("StrumNote", StrumNote);
 		set("Alphabet", Alphabet);
 		set("AttachedSprite", AttachedSprite);
