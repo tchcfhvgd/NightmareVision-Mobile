@@ -242,6 +242,7 @@ class QuantNotesSubState extends MusicBeatSubstate
 			{
 			#if mobile
 			FlxTransitionableState.skipNextTransOut = true;
+			FlxTransitionableState.skipNextTransIn = true;
 			FlxG.resetState();
 			#else
 			close();

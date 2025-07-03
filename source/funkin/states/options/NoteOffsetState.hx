@@ -366,6 +366,8 @@ class NoteOffsetState extends MusicBeatState
 			{
 				timeBar.destroy();
 				FlxG.switchState(MainMenuState.new);
+				FlxG.sound.playMusic(Paths.music('freakyMenu'), 1, true);
+			FlxG.mouse.visible = false;
 			}
 			catch (e)
 			{
