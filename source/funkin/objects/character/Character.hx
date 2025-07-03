@@ -101,7 +101,7 @@ class Character extends FlxSprite
 	/**
 	 *	if enabled, ghosts will show on double notes for the character
 	 */
-	public var ghostsEnabled:Bool = false;
+	public var ghostsEnabled:Bool = true;
 	
 	/**
 	 * Array of all ghosts
