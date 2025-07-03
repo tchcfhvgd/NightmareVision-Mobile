@@ -71,4 +71,23 @@ class CameraUtil
 		}
 		return false;
 	}
+	
+	public static function insertFlxCamera(idx:Int, camera:FlxCamera, defDraw:Bool = false)
+	{
+		var cameras = [
+			for (i in FlxG.cameras.list)
+				{
+					cam: i,
+					defaultDraw: FlxG.cameras.defaults.contains(i)
+				}
+		];
+
+		for (i in cameras)
+			FlxG.cameras.remove(i.cam, false);
+
+		cameras.insert(idx, {cam: camera, defaultDraw: defDraw});
+
+		for (i in cameras)
+			FlxG.cameras.add(i.cam, i.defaultDraw);
+	}
 }
