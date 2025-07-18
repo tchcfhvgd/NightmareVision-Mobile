@@ -44,6 +44,8 @@ class Init extends FlxState
 		
 		funkin.data.Highscore.load();
 		
+		mobile.MobileData.init();
+		
 		funkin.scripts.FunkinHScript.init();
 		
 		#if VIDEOS_ALLOWED
