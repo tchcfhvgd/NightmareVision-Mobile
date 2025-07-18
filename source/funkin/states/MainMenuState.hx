@@ -1,6 +1,6 @@
 package funkin.states;
 
-import lime.app.Application;
+import funkin.backend.macro.GitMacro;
 
 import flixel.FlxCamera;
 import flixel.FlxG;
@@ -104,9 +104,11 @@ class MainMenuState extends MusicBeatState
 			
 			FlxG.camera.follow(camFollow, null, 0.15);
 			
-			var ver = "Nightmare Vision Engine\n" + 'Psych Engine v' + Main.PSYCH_VERSION + "\nFriday Night Funkin' v" + Main.FUNKIN_VERSION;
-			var verionDesc:FlxText = new FlxText(12, FlxG.height - 44, 0, ver, 16);
+			var ver = "Nightmare Vision Engine v" + Main.NMV_VERSION + ' - (${GitMacro.getGitCommitHash()})' + '\nPsych Engine v' + Main.PSYCH_VERSION + "\nFriday Night Funkin' v"
+				+ Main.FUNKIN_VERSION;
+			var verionDesc:FlxText = new FlxText(12, 0, 0, ver, 16);
 			verionDesc.setFormat("VCR OSD Mono", 16, FlxColor.WHITE, LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
+			verionDesc.borderSize = 1.5;
 			verionDesc.y = FlxG.height - verionDesc.height - 12;
 			verionDesc.scrollFactor.set();
 			add(verionDesc);
@@ -149,8 +151,7 @@ class MainMenuState extends MusicBeatState
 	
 	override function update(elapsed:Float)
 	{
-		@:privateAccess
-		if (FlxG.sound.music.volume < 0.8)
+		if (FlxG.sound.music != null && FlxG.sound.music.volume < 0.8)
 		{
 			FlxG.sound.music.volume += 0.5 * elapsed;
 			if (FreeplayState.vocals != null) FreeplayState.vocals.volume += 0.5 * elapsed;
@@ -159,10 +160,11 @@ class MainMenuState extends MusicBeatState
 		if (isHardcodedState())
 		{
 			if (!selectedSomethin)
-			{ 
-				if (controls.UI_UP_P || controls.UI_DOWN_P) {
-				       FlxG.sound.play(Paths.sound('scrollMenu'));
-				       changeItem(controls.UI_UP_P ? -1 : 1);		
+			{
+				if (controls.UI_UP_P || controls.UI_DOWN_P)
+				{
+					FlxG.sound.play(Paths.sound('scrollMenu'));
+					changeItem(controls.UI_UP_P ? -1 : 1);
 				}
 				
 				if (controls.BACK)
@@ -177,12 +179,6 @@ class MainMenuState extends MusicBeatState
 				if (controls.ACCEPT)
 				{
 					script.call('onSelect', [optionShit[curSelected]]);
-					
-					if (optionShit[curSelected] == 'donate')
-					{
-						CoolUtil.browserLoad('https://ninja-muffin24.itch.io/funkin');
-						return;
-					}
 					
 					selectedSomethin = true;
 					FlxG.sound.play(Paths.sound('confirmMenu'));

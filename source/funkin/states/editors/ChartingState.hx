@@ -120,7 +120,7 @@ class ChartingState extends MusicBeatState
 {
 	public static var instance:ChartingState;
 	
-	public var notetypeScripts:Map<String, FunkinScript> = [];
+	public var notetypeScripts:Map<String, FunkinHScript> = [];
 	
 	public static var noteTypeList:Array<String> = // Used for backwards compatibility with 0.1 - 0.3.2 charts, though, you should add your hardcoded custom note types here too.
 		[
@@ -340,13 +340,12 @@ class ChartingState extends MusicBeatState
 					bpm: 100.0,
 					needsVoices: true,
 					arrowSkin: 'default',
-					splashSkin: 'noteSplashes', // idk it would crash if i didn't
+					splashSkin: 'noteSplashes',
 					player1: 'bf',
 					player2: 'bf',
 					gfVersion: 'gf',
 					speed: 1,
 					stage: 'stage',
-					validScore: false,
 					keys: 4,
 					lanes: 2
 				};
@@ -797,8 +796,7 @@ class ChartingState extends MusicBeatState
 				for (file in FileSystem.readDirectory(directory))
 				{
 					var path = haxe.io.Path.join([directory, file]);
-					if (file.endsWith('.hx') || file.endsWith('.hxs') || file.endsWith('.hscript')) trace('NOT ADDING $file, contains an ending not supported.');
-					else
+					if (file.endsWith('.json'))
 					{
 						var stageToCheck:String = file.endsWith('.json') ? file.substr(0, file.length - 5) : file;
 						if (!tempMap.exists(stageToCheck))
@@ -1394,14 +1392,6 @@ class ChartingState extends MusicBeatState
 			directories.push(Paths.mods(mod + '/custom_notetypes/'));
 		#end
 		
-		var exts:Array<String> = [
-			#if LUA_ALLOWED
-			".lua",
-			#end
-			".hscript",
-			".hx",
-			".hxs"
-		];
 		for (i in 0...directories.length)
 		{
 			var directory:String = directories[i];
@@ -1412,23 +1402,17 @@ class ChartingState extends MusicBeatState
 					var path = haxe.io.Path.join([directory, file]);
 					if (!FileSystem.isDirectory(path))
 					{
-						for (ext in exts)
+						for (ext in FunkinHScript.H_EXTS)
 						{
 							if (file.endsWith(ext))
 							{
-								var fileToCheck:String = file.substr(0, file.length - ext.length);
+								var fileToCheck:String = file.substr(0, file.length - ext.length - 1);
 								
 								if (!noteTypeMap.exists(fileToCheck))
 								{
 									displayNameList.push(fileToCheck);
 									noteTypeMap.set(fileToCheck, key);
 									noteTypeIntMap.set(key, fileToCheck);
-									
-									if (ext != '.lua')
-									{
-										var script = FunkinIris.fromFile(path, fileToCheck);
-										notetypeScripts.set(fileToCheck, script);
-									}
 									
 									key++;
 								}
@@ -1473,7 +1457,7 @@ class ChartingState extends MusicBeatState
 		var tab_group_event = new FlxUI(null, UI_box);
 		tab_group_event.name = 'Events';
 		
-		#if LUA_ALLOWED
+		#if MODS_ALLOWED
 		var eventPushedMap:Map<String, Bool> = new Map<String, Bool>();
 		var directories:Array<String> = [];
 		

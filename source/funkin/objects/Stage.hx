@@ -2,86 +2,73 @@ package funkin.objects;
 
 import flixel.group.FlxContainer.FlxTypedContainer;
 import flixel.FlxBasic;
-import flixel.group.FlxGroup.FlxTypedGroup;
 
-import funkin.scripts.*;
-import funkin.data.StageData.StageFile;
 import funkin.data.StageData;
+import funkin.scripts.FunkinHScript;
 
-@:nullSafety
+@:nullSafety(Strict)
 class Stage extends FlxTypedContainer<FlxBasic>
 {
-	public var curStageScript:Null<FunkinScript> = null;
+	/**
+	 * Attached script to the stage
+	 */
+	public var script:Null<FunkinHScript> = null;
 	
+	/**
+	 * The name of the current stage
+	 */
 	public var curStage = "stage";
-	public var stageData:StageFile = funkin.data.StageData.generateDefault();
 	
-	public function new(stageName:String = "stage")
+	/**
+	 * The json info from the current stage
+	 */
+	public final stageData:StageFile;
+	
+	public function new(curStage:String = "stage")
 	{
 		super();
 		
-		curStage = stageName;
+		this.curStage = curStage;
 		
-		var newStageData = StageData.getStageFile(curStage);
-		if (newStageData != null) stageData = newStageData;
+		stageData = StageData.getStageFile(curStage) ?? funkin.data.StageData.generateDefault();
 	}
 	
-	function setupScript(script:FunkinScript)
-	{
-		curStageScript = script;
-		
-		switch (script.scriptType)
-		{
-			case HSCRIPT:
-				script.set("add", add);
-				script.set("stage", this);
-				script.call("onLoad");
-				
-			case LUA:
-				#if LUA_ALLOWED
-				script.call("onCreate", []);
-				#end
-		}
-	}
-	
-	public function buildStage()
+	/**
+	 * Initiates the script for the stage
+	 * 
+	 * returns `true` if the script was made successfully
+	 */
+	public function buildStage():Bool
 	{
 		final baseScriptFile:String = 'stages/$curStage/script';
 		
-		final luaPath = Paths.getPath('$baseScriptFile.lua', TEXT, null, true);
-		
-		var scriptFile = FunkinIris.getPath(baseScriptFile);
-		if (FunkinAssets.exists(scriptFile)) buildHX(scriptFile);
+		var scriptFile = FunkinHScript.getPath(baseScriptFile);
+		if (FunkinAssets.exists(scriptFile)) make(scriptFile);
 		else
 		{
-			scriptFile = FunkinIris.getPath('stages/$curStage');
-			buildHX(scriptFile);
+			scriptFile = FunkinHScript.getPath('stages/$curStage');
+			make(scriptFile);
 		}
 		
-		#if LUA_ALLOWED
-		if (Paths.fileExists('$baseScriptFile.lua', TEXT)) buildLUA(luaPath);
-		else
-		{
-			var luaPath2 = Paths.getPath('stages/$curStage.lua', TEXT, null, true);
-			if (Paths.fileExists(luaPath2, TEXT)) buildLUA(luaPath2);
-		}
-		#end
+		if (script == null) Logger.log('$curStage does not contain a script');
+		
+		return script != null;
 	}
 	
-	function buildHX(scriptFile:String = '')
+	inline function make(scriptFile:String)
 	{
-		var script = FunkinIris.fromFile(scriptFile);
+		script = FunkinHScript.fromFile(scriptFile);
 		if (script.__garbage)
 		{
 			script = FlxDestroyUtil.destroy(script);
 			return;
 		}
-		setupScript(script);
-	}
-	
-	function buildLUA(scriptFile:String = '')
-	{
-		var script = new FunkinLua(scriptFile);
-		setupScript(script);
+		
+		@:nullSafety(Off) // trust me bro
+		{
+			script.set("add", add);
+			script.set("stage", this);
+			script.call("onLoad");
+		}
 	}
 }

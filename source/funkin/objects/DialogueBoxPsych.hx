@@ -168,15 +168,15 @@ class DialogueCharacter extends FlxSprite
 	}
 }
 
-// TO DO: Clean code? Maybe? idk
+// TO DO: Clean code? Maybe? idk //im so srs if i touch this again its a entire rewrite
 class DialogueBoxPsych extends FlxSpriteGroup
 {
 	var dialogue:Alphabet;
 	var dialogueList:DialogueFile = null;
 	
 	public var finishThing:Void->Void;
-	public var nextDialogueThing:Void->Void = null;
-	public var skipDialogueThing:Void->Void = null;
+	public var nextDialogueThing:Null<Void->Void> = null;
+	public var skipDialogueThing:Null<Void->Void> = null;
 	
 	var bgFade:FlxSprite = null;
 	var box:FlxSprite;
@@ -591,15 +591,10 @@ class DialogueBoxPsych extends FlxSpriteGroup
 		}
 	}
 	
-	public static function parseDialogue(path:String):DialogueFile
+	public static function parseDialogue(path:String):Null<DialogueFile>
 	{
-		#if MODS_ALLOWED
-		if (FileSystem.exists(path))
-		{
-			return cast Json.parse(File.getContent(path));
-		}
-		#end
-		return cast Json.parse(Assets.getText(path));
+		if (FunkinAssets.exists(path, TEXT)) return cast Json.parse(FunkinAssets.getContent(path));
+		else return null;
 	}
 	
 	public static function updateBoxOffsets(box:FlxSprite)

@@ -56,23 +56,21 @@ class MusicBeatState extends FlxUIState
 		
 		scriptName = s;
 		
-		var scriptFile = FunkinIris.getPath('scripts/menus/$scriptName');
+		var scriptFile = FunkinHScript.getPath('scripts/menus/$scriptName');
 		
 		if (FunkinAssets.exists(scriptFile))
 		{
-			var tScript = FunkinIris.fromFile(scriptFile);
-			if (tScript.__garbage)
+			var newScript = FunkinHScript.fromFile(scriptFile, scriptName);
+			if (newScript.__garbage)
 			{
-				tScript = FlxDestroyUtil.destroy(tScript);
+				newScript = FlxDestroyUtil.destroy(newScript);
 				return false;
 			}
 			
-			script.addScript(tScript);
+			Logger.log('script [$scriptName] initialized');
+			
+			script.addScript(newScript);
 			scripted = true;
-		}
-		else
-		{
-			Logger.log('$scriptName script [$scriptName] not found.');
 		}
 		
 		if (callOnCreate) script.call('onCreate', []);
@@ -172,6 +170,12 @@ class MusicBeatState extends FlxUIState
 		FlxTransitionableState.skipNextTransOut = false;
 	}
 	
+	/**
+	 * Sorts a `FlxTypedGroup` based on objects `zIndex`.
+	 * 
+	 * used for stage layering primarily
+	 * @param group 
+	 */
 	public function refreshZ(?group:FlxTypedGroup<FlxBasic>)
 	{
 		group ??= FlxG.state;
@@ -266,13 +270,14 @@ class MusicBeatState extends FlxUIState
 		script.call('onBeatHit', [curBeat]);
 	}
 	
-	public function sectionHit():Void {}
-	
-	function getBeatsOnSection()
+	public function sectionHit():Void
 	{
-		var val:Null<Float> = 4;
-		if (PlayState.SONG != null && PlayState.SONG.notes[curSection] != null) val = PlayState.SONG.notes[curSection].sectionBeats;
-		return val == null ? 4 : val;
+		script.call('onSectionHit', []);
+	}
+	
+	function getBeatsOnSection():Float
+	{
+		return PlayState.SONG?.notes[curSection]?.sectionBeats ?? 4.0;
 	}
 	
 	@:access(funkin.states.FreeplayState)

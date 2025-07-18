@@ -5,7 +5,7 @@ import haxe.Json;
 typedef SwagSection =
 {
 	var sectionNotes:Array<Dynamic>;
-	var sectionBeats:Float;
+	var ?sectionBeats:Float;
 	var lengthInSteps:Int;
 	var typeOfSection:Int;
 	var mustHitSection:Bool;
@@ -34,7 +34,6 @@ typedef SwagSong =
 	
 	var arrowSkin:String;
 	var splashSkin:String;
-	var validScore:Bool;
 }
 
 class Song
