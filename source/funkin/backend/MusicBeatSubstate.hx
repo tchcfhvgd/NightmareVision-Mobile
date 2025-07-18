@@ -45,12 +45,11 @@ class MusicBeatSubstate extends FlxSubState
 		scriptGroup.parent = this;
 		scriptName = s;
 		
-		final scriptFile = FunkinIris.getPath('scripts/$scriptPrefix/$scriptName');
-		// trace(FunkinIris.getPath('scripts/$scriptPrefix/$scriptName'));
+		final scriptFile = FunkinHScript.getPath('scripts/$scriptPrefix/$scriptName');
 		
 		if (FunkinAssets.exists(scriptFile))
 		{
-			var tScript = FunkinIris.fromFile(scriptFile);
+			var tScript = FunkinHScript.fromFile(scriptFile);
 			if (tScript.__garbage)
 			{
 				tScript = FlxDestroyUtil.destroy(tScript);
@@ -73,8 +72,8 @@ class MusicBeatSubstate extends FlxSubState
 		group ??= FlxG.state;
 		group.sort(SortUtil.sortByZ, flixel.util.FlxSort.ASCENDING);
 	}
-		
-    public var touchPad:TouchPad;
+	
+	public var touchPad:TouchPad;
 	public var touchPadCam:FlxCamera;
 	public var mobileControls:IMobileControls;
 	public var mobileControlsCam:FlxCamera;

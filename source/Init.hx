@@ -46,7 +46,7 @@ class Init extends FlxState
 		
 		mobile.MobileData.init();
 		
-		funkin.scripts.FunkinIris.init();
+		funkin.scripts.FunkinHScript.init();
 		
 		#if VIDEOS_ALLOWED
 		funkin.video.FunkinVideoSprite.init();

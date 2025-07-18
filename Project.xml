@@ -2,7 +2,7 @@
 <project>
 	<!-- _________________________ Application Settings _________________________ -->
 
-	<app title="Friday n Fnightfunkin" file="Friday n Fnightfunkin" packageName="com.duskiewhy.nmv" package="com.duskiewhy.nmv" main="Main" version="0.2.7" company="ShadowMario" />
+	<app title="Friday n Fnightfunkin" file="Friday n Fnightfunkin" packageName="com.duskiewhy.nmv" package="com.duskiewhy.nmv" main="Main" version="0.2.8" company="ShadowMario" />
 
 	<!--Switch Export with Unique ApplicationID and Icon-->
 	<set name="APP_ID" value="0x0100f6c013bbc000" />
@@ -27,7 +27,7 @@
 	<window if="desktop" orientation="landscape" fullscreen="false" resizable="true" vsync="false"/>
 
 	<!--Mobile-specific-->
-	<window if="mobile" orientation="landscape" fullscreen="true" resizable="false" allow-shaders="true" require-shaders="true" allow-high-dpi="true" />
+	    <window if="mobile" orientation="landscape" fullscreen="true" resizable="false" allow-shaders="true" require-shaders="true" allow-high-dpi="true" />
 
 	<!--Switch-specific-->
 	<window if="switch" orientation="landscape" fullscreen="true" width="0" height="0" resizable="true" />
@@ -50,7 +50,6 @@
 	
 	<!--ENGINE CUSTOMIZATION-->
 	<define name="MODS_ALLOWED" if="desktop || mobile" />
-	<define name="LUA_ALLOWED" if="cpp" />
 	<define name="VIDEOS_ALLOWED" if="cpp" />
 	<define name="DISCORD_ALLOWED" if="desktop"/>
 
@@ -81,8 +80,6 @@
 	
 	<haxelib name="hscript-iris"/>
 
-	<!--Extra Libraries-->
-	<haxelib name="linc_luajit" if="LUA_ALLOWED"/>
 	<haxelib name="discord_rpc" if="DISCORD_ALLOWED"/>
 	<haxelib name="hxvlc" if="VIDEOS_ALLOWED"/>
 
@@ -119,9 +116,6 @@
 	<!--Disables all tracing abilities. Enable this for a small performance improvement-->
 	<!-- <define name="DISABLE_TRACES" if="desktop release"/> -->
 
-	<!--Needed for lua-->
-	<haxedef name="NO_PRECOMPILED_HEADERS" if="LUA_ALLOWED"/>
-
 	<!--Remove the legacy health system-->
 	<haxedef name="FLX_NO_HEALTH" />
 
@@ -133,7 +127,7 @@
 
 	<!--Enable this for Nape release builds for a serious peformance improvement-->
 	<haxedef name="NAPE_RELEASE_BUILD" unless="debug" />
-
+	
 	<section if="cpp">
 		<haxedef name="HXCPP_CHECK_POINTER" />
 		<haxedef name="HXCPP_STACK_LINE" />
@@ -146,7 +140,7 @@
 	
 	<!-- Do whatever you want I'm tired uninstall and install everytime -->
 	<certificate path="key.keystore" password="psychengine" alias="psychport" alias-password="psychengine" if="android" unless="debug" />
-	
+
 	<!--For haxe 4.3.0 and newer cleaner error reporting-->
 	<haxedef name="message.reporting" value="pretty" />
 

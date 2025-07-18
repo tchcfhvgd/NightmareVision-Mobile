@@ -51,6 +51,7 @@ jobs:
       - name: Install Haxelib
         run: |
           haxelib setup ~/haxelib
+          haxelib install haxelib
           haxelib git hxcpp https://github.com/th2l-devs/hxcpp
           haxelib git lime https://github.com/tchcfhvgd/lime
           haxelib install openfl
@@ -60,7 +61,6 @@ jobs:
           haxelib install flixel-addons 3.3.2
           haxelib install hxvlc 2.0.1
           haxelib install hscript-iris
-          haxelib git linc_luajit https://github.com/th2l-devs/linc_luajit
           haxelib git flxanimate https://github.com/FixedData/flxanimate
           haxelib list
       
